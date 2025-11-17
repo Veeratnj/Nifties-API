@@ -371,41 +371,10 @@ class PaginationSchema(BaseModel):
     page: int = Field(1, ge=1)
     page_size: int = Field(10, ge=1, le=100)
     total: Optional[int] = None
+    total: Optional[int] = None
     total_pages: Optional[int] = None
-, EmailStr
-from typing import Any, List, Optional, Union
-from datetime import datetime
-
-
-# class UserBase(BaseModel):
-#     name: str
-#     email: EmailStr
-#     age: Optional[int] = None
+    total: Optional[int] = None
+    total_pages: Optional[int] = None
 #     gender: Optional[str] = None
-#     is_subscribe: bool
-#     class Config:
-#         orm_mode = True
 
-
-
-
-# class UserUpdate(BaseModel):
-#     name: Optional[str] = None
-#     email: Optional[EmailStr] = None
-#     age: Optional[int] = None
-#     gender: Optional[str] = None
 #     is_subscribe: Optional[bool] = None
-
-
-class CommonResponse(BaseModel):
-    status:int
-    data: Union[List[Any], Any]
-    msg:str
-
-
-class ChatRequest(BaseModel):
-    message: str
-
-class ChatResponse(BaseModel):
-    response: str
-

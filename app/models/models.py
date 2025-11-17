@@ -166,7 +166,7 @@ class Log(Base):
     category = Column(String(50))  # STRATEGY, TRADE, ORDER, SYSTEM
     source = Column(String(100))  # AlgoEngine, RiskManager, etc.
     user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
-    metadata = Column(Text)  # JSON for additional data
+    log_metadata = Column(Text)  # JSON for additional data
     
     def __repr__(self):
         return f"<Log(id={self.id}, level={self.level}, category={self.category})>"
