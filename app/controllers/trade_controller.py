@@ -1,0 +1,196 @@
+"""
+Trade controller - Trade management endpoints
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from typing import List
+
+from app.db.db import get_db
+from app.schemas.schema import TradeSchema, TradeCreate, TradeUpdate, ResponseSchema
+from app.services.trade_services import TradeService
+from app.models.models import User
+from app.utils.security import get_current_user, check_user_owns_resource
+import logging
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/api/trades", tags=["trades"])
+
+
+@router.get("", response_model=ResponseSchema[List[TradeSchema]])
+async def get_trades(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all trades for current user"""
+    try:
+        trades = TradeService.get_all_trades(db, user_id=current_user.id)
+        return ResponseSchema(data=trades, message="Trades retrieved successfully")
+    except Exception as e:
+        logger.error(f"Error getting trades: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving trades"
+        )
+
+
+@router.get("/{trade_id}", response_model=ResponseSchema[TradeSchema])
+async def get_trade(
+    trade_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get specific trade"""
+    trade = TradeService.get_trade_by_id(db, trade_id)
+    
+    if not trade:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Trade not found"
+        )
+    
+    if not (trade.user_id == current_user.id or current_user.role == "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this trade"
+        )
+    
+    return ResponseSchema(data=trade)
+
+
+@router.post("", response_model=ResponseSchema[TradeSchema], status_code=status.HTTP_201_CREATED)
+async def create_trade(
+    trade_data: TradeCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create new trade"""
+    try:
+        new_trade = TradeService.create_trade(db, trade_data, current_user.id)
+        logger.info(f"Trade created for user {current_user.id}: {new_trade.id}")
+        return ResponseSchema(
+            data=new_trade,
+            status=201,
+            message="Trade created successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error creating trade: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error creating trade"
+        )
+
+
+@router.put("/{trade_id}", response_model=ResponseSchema[TradeSchema])
+async def update_trade(
+    trade_id: int,
+    trade_data: TradeUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update trade"""
+    trade = TradeService.get_trade_by_id(db, trade_id)
+    
+    if not trade:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Trade not found"
+        )
+    
+    if not (trade.user_id == current_user.id or current_user.role == "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this trade"
+        )
+    
+    try:
+        updated_trade = TradeService.update_trade(db, trade_id, trade_data)
+        return ResponseSchema(data=updated_trade, message="Trade updated successfully")
+    except Exception as e:
+        logger.error(f"Error updating trade: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error updating trade"
+        )
+
+
+@router.delete("/{trade_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_trade(
+    trade_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete trade"""
+    trade = TradeService.get_trade_by_id(db, trade_id)
+    
+    if not trade:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Trade not found"
+        )
+    
+    if not (trade.user_id == current_user.id or current_user.role == "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this trade"
+        )
+    
+    deleted = TradeService.delete_trade(db, trade_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error deleting trade"
+        )
+    
+    return None
+
+
+@router.get("/active/all", response_model=ResponseSchema[List[TradeSchema]])
+async def get_active_trades(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get active trades for current user"""
+    try:
+        trades = TradeService.get_active_trades(db, current_user.id)
+        return ResponseSchema(data=trades, message="Active trades retrieved successfully")
+    except Exception as e:
+        logger.error(f"Error getting active trades: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving active trades"
+        )
+
+
+@router.post("/{trade_id}/close", response_model=ResponseSchema[TradeSchema])
+async def close_trade(
+    trade_id: int,
+    closing_price: float,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Close trade with final price"""
+    trade = TradeService.get_trade_by_id(db, trade_id)
+    
+    if not trade:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Trade not found"
+        )
+    
+    if not (trade.user_id == current_user.id or current_user.role == "admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to close this trade"
+        )
+    
+    try:
+        closed_trade = TradeService.close_trade(db, trade_id, closing_price)
+        return ResponseSchema(data=closed_trade, message="Trade closed successfully")
+    except Exception as e:
+        logger.error(f"Error closing trade: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error closing trade"
+        )

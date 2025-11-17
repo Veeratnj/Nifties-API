@@ -1,0 +1,318 @@
+{
+  "users": [
+    {
+      "id": "admin-1",
+      "email": "admin@example.com",
+      "password": "admin123",
+      "role": "admin",
+      "name": "Admin User",
+      "createdAt": "2025-01-01T10:00:00Z"
+    },
+    {
+      "id": "user-1",
+      "email": "user@example.com",
+      "password": "user123",
+      "role": "user",
+      "name": "Trader User",
+      "createdAt": "2025-01-05T10:00:00Z"
+    },
+    {
+      "id": "user-2",
+      "email": "trader@example.com",
+      "password": "trader123",
+      "role": "trader",
+      "name": "Pro Trader",
+      "createdAt": "2025-01-10T10:00:00Z"
+    }
+  ],
+  "marketIndices": [
+    {
+      "id": 1,
+      "name": "NIFTY 50",
+      "value": 21894.50,
+      "change": 125.30,
+      "changePercent": 0.58,
+      "isPositive": true,
+      "timestamp": "2025-01-17T15:30:00Z"
+    },
+    {
+      "id": 2,
+      "name": "BANK NIFTY",
+      "value": 46125.80,
+      "change": -89.20,
+      "changePercent": -0.19,
+      "isPositive": false,
+      "timestamp": "2025-01-17T15:30:00Z"
+    },
+    {
+      "id": 3,
+      "name": "FINNIFTY",
+      "value": 19543.60,
+      "change": 45.70,
+      "changePercent": 0.23,
+      "isPositive": true,
+      "timestamp": "2025-01-17T15:30:00Z"
+    },
+    {
+      "id": 4,
+      "name": "MIDCAP NIFTY",
+      "value": 45672.30,
+      "change": 234.50,
+      "changePercent": 0.52,
+      "isPositive": true,
+      "timestamp": "2025-01-17T15:30:00Z"
+    }
+  ],
+  "pnl": [
+    {
+      "id": 1,
+      "period": "today",
+      "value": 12450,
+      "isPositive": true,
+      "description": "+8.5% from yesterday",
+      "trades": 8
+    },
+    {
+      "id": 2,
+      "period": "week",
+      "value": 45230,
+      "isPositive": true,
+      "description": "12 winning trades",
+      "trades": 12
+    },
+    {
+      "id": 3,
+      "period": "month",
+      "value": 123450,
+      "isPositive": true,
+      "description": "45 total trades",
+      "trades": 45
+    }
+  ],
+  "trades": [
+    {
+      "id": 1,
+      "symbol": "NIFTY 21900 CE",
+      "index": "NIFTY",
+      "strike": 21900,
+      "type": "CE",
+      "qty": 50,
+      "entryPrice": 125.50,
+      "currentPrice": 142.30,
+      "pnl": 840,
+      "pnlPercent": 13.4,
+      "status": "ACTIVE",
+      "strategy": "Straddle Strategy",
+      "timestamp": "10:15 AM",
+      "createdAt": "2025-01-17T10:15:00Z"
+    },
+    {
+      "id": 2,
+      "symbol": "BANKNIFTY 46000 PE",
+      "index": "BANKNIFTY",
+      "strike": 46000,
+      "type": "PE",
+      "qty": 25,
+      "entryPrice": 245.80,
+      "currentPrice": 234.20,
+      "pnl": -290,
+      "pnlPercent": -4.7,
+      "status": "ACTIVE",
+      "strategy": "Iron Condor",
+      "timestamp": "10:22 AM",
+      "createdAt": "2025-01-17T10:22:00Z"
+    },
+    {
+      "id": 3,
+      "symbol": "FINNIFTY 19500 CE",
+      "index": "FINNIFTY",
+      "strike": 19500,
+      "type": "CE",
+      "qty": 40,
+      "entryPrice": 89.50,
+      "currentPrice": 102.80,
+      "pnl": 532,
+      "pnlPercent": 14.9,
+      "status": "ACTIVE",
+      "strategy": "Bull Call Spread",
+      "timestamp": "10:45 AM",
+      "createdAt": "2025-01-17T10:45:00Z"
+    }
+  ],
+  "orderHistory": [
+    {
+      "id": "ORD001",
+      "symbol": "NIFTY 21900 CE",
+      "orderType": "BUY",
+      "qty": 50,
+      "price": 125.50,
+      "status": "COMPLETED",
+      "timestamp": "2025-01-16T09:30:00Z",
+      "executedPrice": 125.50,
+      "executedQty": 50
+    },
+    {
+      "id": "ORD002",
+      "symbol": "BANKNIFTY 46000 PE",
+      "orderType": "SELL",
+      "qty": 25,
+      "price": 245.80,
+      "status": "COMPLETED",
+      "timestamp": "2025-01-16T10:15:00Z",
+      "executedPrice": 245.80,
+      "executedQty": 25
+    },
+    {
+      "id": "ORD003",
+      "symbol": "FINNIFTY 19500 CE",
+      "orderType": "BUY",
+      "qty": 40,
+      "price": 89.50,
+      "status": "PENDING",
+      "timestamp": "2025-01-17T14:45:00Z",
+      "executedPrice": null,
+      "executedQty": 0
+    }
+  ],
+  "strategies": [
+    {
+      "id": 1,
+      "name": "Straddle Strategy",
+      "index": "NIFTY",
+      "status": "ACTIVE",
+      "description": "Long straddle on NIFTY index with CE and PE contracts",
+      "entryDate": "2025-01-10T09:30:00Z",
+      "profitTarget": 500,
+      "stopLoss": 200,
+      "currentPnl": 840,
+      "trades": 12,
+      "winRate": 75
+    },
+    {
+      "id": 2,
+      "name": "Iron Condor",
+      "index": "BANKNIFTY",
+      "status": "ACTIVE",
+      "description": "Iron condor spread on BANKNIFTY with defined risk",
+      "entryDate": "2025-01-12T10:00:00Z",
+      "profitTarget": 300,
+      "stopLoss": 400,
+      "currentPnl": -290,
+      "trades": 8,
+      "winRate": 62.5
+    },
+    {
+      "id": 3,
+      "name": "Bull Call Spread",
+      "index": "FINNIFTY",
+      "status": "PAUSED",
+      "description": "Bull call spread strategy on FINNIFTY for bullish outlook",
+      "entryDate": "2025-01-13T11:00:00Z",
+      "profitTarget": 200,
+      "stopLoss": 150,
+      "currentPnl": 532,
+      "trades": 5,
+      "winRate": 80
+    }
+  ],
+  "logs": [
+    {
+      "id": 1,
+      "timestamp": "2025-01-17T15:45:23Z",
+      "level": "INFO",
+      "message": "Strategy 'Straddle Strategy' executed 5 contracts",
+      "category": "STRATEGY",
+      "source": "AlgoEngine"
+    },
+    {
+      "id": 2,
+      "timestamp": "2025-01-17T15:44:10Z",
+      "level": "WARNING",
+      "message": "Stop loss triggered on BANKNIFTY trade",
+      "category": "TRADE",
+      "source": "RiskManager"
+    },
+    {
+      "id": 3,
+      "timestamp": "2025-01-17T15:42:05Z",
+      "level": "INFO",
+      "message": "Market opened successfully",
+      "category": "MARKET",
+      "source": "MarketData"
+    },
+    {
+      "id": 4,
+      "timestamp": "2025-01-17T15:40:00Z",
+      "level": "ERROR",
+      "message": "Connection lost to data feed",
+      "category": "CONNECTIVITY",
+      "source": "DataService"
+    },
+    {
+      "id": 5,
+      "timestamp": "2025-01-17T15:35:15Z",
+      "level": "INFO",
+      "message": "Order ORD001 filled at 125.50",
+      "category": "ORDER",
+      "source": "OrderManager"
+    }
+  ],
+  "alerts": [
+    {
+      "id": 1,
+      "message": "Order filled: NIFTY 21900 CE",
+      "time": "2 mins ago",
+      "type": "success",
+      "timestamp": "2025-01-17T15:43:00Z"
+    },
+    {
+      "id": 2,
+      "message": "Stop loss triggered on BANKNIFTY",
+      "time": "15 mins ago",
+      "type": "warning",
+      "timestamp": "2025-01-17T15:30:00Z"
+    },
+    {
+      "id": 3,
+      "message": "New signal: Iron Condor setup",
+      "time": "1 hour ago",
+      "type": "info",
+      "timestamp": "2025-01-17T14:45:00Z"
+    }
+  ],
+  "analytics": [
+    {
+      "id": 1,
+      "date": "2025-01-17",
+      "totalTrades": 15,
+      "winCount": 11,
+      "lossCount": 4,
+      "winRate": 73.3,
+      "avgWin": 189.27,
+      "avgLoss": 120.5,
+      "maxDrawdown": 12.5
+    },
+    {
+      "id": 2,
+      "date": "2025-01-16",
+      "totalTrades": 12,
+      "winCount": 9,
+      "lossCount": 3,
+      "winRate": 75,
+      "avgWin": 205.56,
+      "avgLoss": 115,
+      "maxDrawdown": 10.2
+    },
+    {
+      "id": 3,
+      "date": "2025-01-15",
+      "totalTrades": 10,
+      "winCount": 7,
+      "lossCount": 3,
+      "winRate": 70,
+      "avgWin": 188.57,
+      "avgLoss": 125,
+      "maxDrawdown": 14.8
+    }
+  ]
+}
