@@ -109,7 +109,7 @@ async def get_analytics_range(
         )
 
 
-@router.get("/latest/{days}", response_model=ResponseSchema[List[AnalyticsSchema]])
+@router.get("/latest", response_model=ResponseSchema[List[AnalyticsSchema]])
 async def get_latest_analytics(
     days: int = Query(30, ge=1, le=365),
     current_user: User = Depends(get_current_user),

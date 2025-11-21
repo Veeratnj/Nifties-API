@@ -6,7 +6,7 @@ import logging
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from app.models.models import MarketIndex, PnL
+from app.models.models import MarketIndex, PnLSnapshot
 from app.schemas.schema import MarketIndexSchema, MarketIndexCreate, MarketIndexUpdate, PnLSchema, PnLCreate
 
 logger = logging.getLogger(__name__)
@@ -93,22 +93,24 @@ class MarketService:
             logger.error(f"Error deleting market index {index_id}: {str(e)}")
             raise
 
+
     @staticmethod
-    def get_all_pnl(db: Session) -> List[PnL]:
+    def get_all_pnl(db: Session) -> List[PnLSnapshot]:
         """Get all PnL records"""
         try:
-            pnl_records = db.query(PnL).all()
+            pnl_records = db.query(PnLSnapshot).all()
             logger.info(f"Retrieved {len(pnl_records)} PnL records")
             return pnl_records
         except Exception as e:
             logger.error(f"Error retrieving PnL records: {str(e)}")
             raise
 
+
     @staticmethod
-    def get_pnl_by_period(db: Session, period: str) -> Optional[PnL]:
+    def get_pnl_by_period(db: Session, period: str) -> Optional[PnLSnapshot]:
         """Get PnL by period"""
         try:
-            pnl = db.query(PnL).filter(PnL.period == period).first()
+            pnl = db.query(PnLSnapshot).filter(PnLSnapshot.snapshot_type == period).first()
             if pnl:
                 logger.info(f"Retrieved PnL for period: {period}")
             return pnl
@@ -117,14 +119,14 @@ class MarketService:
             raise
 
     @staticmethod
-    def create_pnl(db: Session, pnl_data: PnLCreate) -> PnL:
+    def create_pnl(db: Session, pnl_data: PnLCreate) -> PnLSnapshot:
         """Create new PnL record"""
         try:
-            new_pnl = PnL(**pnl_data.dict())
+            new_pnl = PnLSnapshot(**pnl_data.dict())
             db.add(new_pnl)
             db.commit()
             db.refresh(new_pnl)
-            logger.info(f"Created PnL record for period: {new_pnl.period}")
+            logger.info(f"Created PnL record for period: {new_pnl.snapshot_type}")
             return new_pnl
         except Exception as e:
             db.rollback()

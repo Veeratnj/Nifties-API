@@ -22,6 +22,7 @@ from app.controllers import (
     strategy_controller,
     user_controller,
     analytics_controller,
+    nifties_opt_controller,
 )
 
 # Configure logging
@@ -81,6 +82,7 @@ def create_app():
     app.include_router(strategy_controller.router)
     app.include_router(user_controller.router)
     app.include_router(analytics_controller.router)
+    app.include_router(nifties_opt_controller.router)
     
     logger.info("All routers registered successfully")
     logger.info(f"API started on version {API_VERSION}")

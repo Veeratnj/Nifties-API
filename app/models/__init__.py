@@ -2,16 +2,17 @@
 Models package - Database models for all entities
 """
 
+
 from app.models.models import (
     User,
     Trade,
     Order,
     Strategy,
     Alert,
-    Log,
+    SystemLog,
     Analytics,
     MarketIndex,
-    PnL,
+    PnLSnapshot,
 )
 
 __all__ = [
@@ -20,8 +21,8 @@ __all__ = [
     "Order",
     "Strategy",
     "Alert",
-    "Log",
+    "SystemLog",
     "Analytics",
     "MarketIndex",
-    "PnL",
+    "PnLSnapshot",
 ]

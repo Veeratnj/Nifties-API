@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.db.db import get_db
 from app.schemas.schema import LoginSchema, TokenSchema, UserCreate, UserSchema, LoginResponseSchema
 from app.services.user_services import UserService
-from app.utils.security import SecurityUtils, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.utils.security import SecurityUtils, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user
 from app.models.models import User
 import logging
 
@@ -68,7 +68,7 @@ async def register(
 
 @router.post("/refresh", response_model=TokenSchema)
 async def refresh_token(
-    current_user: User = Depends(SecurityUtils.get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Refresh JWT token"""
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
