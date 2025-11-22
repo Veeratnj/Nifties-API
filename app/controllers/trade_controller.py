@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.db import get_db
-from app.schemas.schema import TradeSchema, TradeCreate, TradeUpdate, ResponseSchema
+from app.schemas.schema import TradeSchema, TradeCreate, TradeUpdate, ResponseSchema, PositionSchema
 from app.services.trade_services import TradeService
+from app.services.position_service import PositionService
 from app.models.models import User
 from app.utils.security import get_current_user, check_user_owns_resource
 import logging
@@ -18,15 +19,24 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/trades", tags=["trades"])
 
 
-@router.get("", response_model=ResponseSchema[List[TradeSchema]])
+@router.get("", response_model=ResponseSchema)
 async def get_trades(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get all trades for current user"""
+    """
+    Get live positions (active trades) based on user role:
+    - SUPERADMIN/ADMIN: See ALL users' trades
+    - USER/TRADER: See only their own trades
+    """
     try:
-        trades = TradeService.get_all_trades(db, user_id=current_user.id)
-        return ResponseSchema(data=trades, message="Trades retrieved successfully")
+        # Pass user role for access control
+        positions = PositionService.get_all_positions(
+            db, 
+            user_id=current_user.id,
+            user_role=current_user.role.value  # Pass the role enum value
+        )
+        return ResponseSchema(data=positions, message="Trades retrieved successfully")
     except Exception as e:
         logger.error(f"Error getting trades: {str(e)}")
         raise HTTPException(

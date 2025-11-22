@@ -8,6 +8,8 @@ from app.services.order_services import OrderService
 from app.services.strategy_services import StrategyService
 from app.services.user_services import UserService
 from app.services.analytics_services import AnalyticsService
+from app.services.log_services import LogService
+from app.services.alert_services import AlertService
 
 __all__ = [
     "MarketService",
@@ -16,4 +18,6 @@ __all__ = [
     "StrategyService",
     "UserService",
     "AnalyticsService",
+    "LogService",
+    "AlertService",
 ]

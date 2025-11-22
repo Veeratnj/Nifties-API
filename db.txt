@@ -1,0 +1,2 @@
+📊 Database Schema Summary
+CategoryTablesDescriptionUser Management6User, Broker, UserBrokerAccount, Settings (3 types)Market Data3MarketIndex, OptionChain, HistoricalDataTrading3Position, Order, TradeStrategy2Strategy, SignalRisk & Analytics3RiskMetrics, Analytics, PnLSnapshotNotifications3Notification, Alert, Watchlist (2 tables)System2SystemLog, AuditLogBroker1BrokerOrderBacktesting2Backtest, BacktestTradeEvents2MarketHoliday, MarketEventControls2KillSwitch, SystemSettingsTotal29 TablesComplete trading platform

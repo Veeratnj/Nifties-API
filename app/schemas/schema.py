@@ -16,11 +16,15 @@ class TradeStatusEnum(str, Enum):
     PENDING = "PENDING"
 
 
+
 class OrderStatusEnum(str, Enum):
     PENDING = "PENDING"
-    COMPLETED = "COMPLETED"
+    PLACED = "PLACED"
+    EXECUTED = "EXECUTED"
+    PARTIALLY_EXECUTED = "PARTIALLY_EXECUTED"
     CANCELLED = "CANCELLED"
     REJECTED = "REJECTED"
+    EXPIRED = "EXPIRED"
 
 
 class StrategyStatusEnum(str, Enum):
@@ -30,9 +34,10 @@ class StrategyStatusEnum(str, Enum):
 
 
 class UserRoleEnum(str, Enum):
-    ADMIN = "admin"
-    TRADER = "trader"
-    USER = "user"
+    SUPERADMIN = "SUPERADMIN"
+    ADMIN = "ADMIN"
+    TRADER = "TRADER"
+    USER = "USER"
 
 
 class AlertTypeEnum(str, Enum):
@@ -72,7 +77,7 @@ class UserSchema(UserBase):
     id: int
     is_active: bool
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -138,71 +143,161 @@ class PnLUpdate(BaseModel):
     trades: Optional[int] = None
 
 
+
+
 # ==================== Trade Schemas ====================
 
 class TradeBase(BaseModel):
     symbol: str
-    index: str
-    strike: int
-    type: str  # CE or PE
-    qty: int = Field(..., gt=0)
+    underlying: str  # NIFTY, BANKNIFTY, etc.
+    strike_price: int
+    option_type: str  # CE or PE
+    expiry_date: datetime
+    entry_qty: int = Field(..., gt=0)
     entry_price: float = Field(..., gt=0)
-    current_price: float = Field(..., gt=0)
-    status: TradeStatusEnum = TradeStatusEnum.ACTIVE
-    strategy: Optional[str] = None
-
+    entry_time: datetime
+    entry_order_id: Optional[str] = None
+    
 
 class TradeCreate(TradeBase):
-    pass
+    exit_qty: Optional[int] = None
+    exit_price: Optional[float] = None
+    exit_time: Optional[datetime] = None
+    exit_order_id: Optional[str] = None
 
 
 class TradeUpdate(BaseModel):
-    current_price: Optional[float] = Field(None, gt=0)
-    status: Optional[TradeStatusEnum] = None
-    strategy: Optional[str] = None
+    exit_qty: Optional[int] = Field(None, gt=0)
+    exit_price: Optional[float] = Field(None, gt=0)
+    exit_time: Optional[datetime] = None
+    exit_order_id: Optional[str] = None
+    trade_type: Optional[str] = None
+    exit_reason: Optional[str] = None
 
 
 class TradeSchema(TradeBase):
     id: int
     user_id: int
-    pnl: float
-    pnl_percent: float
-    timestamp: datetime
+    strategy_id: Optional[int] = None
+    position_id: Optional[int] = None
+    
+    # Exit details
+    exit_qty: int
+    exit_price: float
+    exit_time: datetime
+    exit_order_id: Optional[str] = None
+    
+    # P&L
+    gross_pnl: float
+    brokerage: Optional[float] = 0
+    taxes: Optional[float] = 0
+    charges: Optional[float] = 0
+    net_pnl: float
+    pnl_percent: Optional[float] = None
+    
+    # Trade metadata
+    trade_type: Optional[str] = None  # INTRADAY, POSITIONAL
+    exit_reason: Optional[str] = None  # TARGET, STOPLOSS, MANUAL, SQUARE_OFF, EXPIRY
+    holding_time: Optional[int] = None  # in minutes
+    
     created_at: datetime
+
+
+    class Config:
+        from_attributes = True
+
+
+# ==================== Position Schemas (Live/Active Trades) ====================
+
+class PositionBase(BaseModel):
+    symbol: str
+    index: str  # underlying - NIFTY, BANKNIFTY, etc (mapped from 'underlying')
+    strike: int  # strike_price (mapped)
+    type: str  # option_type - CE or PE (mapped)
+    qty: int = Field(..., gt=0)
+    entry_price: float = Field(..., gt=0)
+    current_price: float = Field(..., gt=0)
+    status: str = "ACTIVE"  # OPEN or CLOSED from PositionStatus
+    strategy: Optional[str] = None  # Strategy name
+
+
+class PositionCreate(PositionBase):
+    pass
+
+
+class PositionUpdate(BaseModel):
+    current_price: Optional[float] = Field(None, gt=0)
+    qty: Optional[int] = Field(None, gt=0)
+    status: Optional[str] = None
+
+
+class PositionSchema(PositionBase):
+    id: int
+    user_id: int
+    pnl: float  # total_pnl or unrealized_pnl
+    pnl_percent: float
+    timestamp: datetime  # entry_time (mapped)
+    created_at: datetime  # entry_time
     updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
+
 # ==================== Order Schemas ====================
 
 class OrderBase(BaseModel):
     symbol: str
+    underlying: str  # NIFTY, BANKNIFTY, etc
     order_type: str  # BUY or SELL
+    product_type: Optional[str] = "NRML"  # MIS, NRML, CNC
     qty: int = Field(..., gt=0)
-    price: float = Field(..., gt=0)
+    price: Optional[float] = Field(None, gt=0)
+    trigger_price: Optional[float] = None
     status: OrderStatusEnum = OrderStatusEnum.PENDING
 
 
 class OrderCreate(OrderBase):
-    pass
+    strategy_id: Optional[int] = None
+    position_id: Optional[int] = None
 
 
 class OrderUpdate(BaseModel):
     status: Optional[OrderStatusEnum] = None
-    executed_price: Optional[float] = Field(None, gt=0)
-    executed_qty: Optional[int] = Field(None, gt=0)
+    executed_qty: Optional[int] = Field(None, ge=0)
+    avg_executed_price: Optional[float] = Field(None, gt=0)
+    status_message: Optional[str] = None
 
 
 class OrderSchema(OrderBase):
-    id: str
+    id: int  # Integer ID, not string
     user_id: int
-    executed_price: Optional[float] = None
-    executed_qty: Optional[int] = None
-    timestamp: datetime
-    created_at: datetime
-    updated_at: datetime
+    strategy_id: Optional[int] = None
+    position_id: Optional[int] = None
+    
+    # Internal tracking
+    order_id: Optional[str] = None  # Internal order ID string
+    
+    # Execution details
+    executed_qty: int = 0
+    pending_qty: Optional[int] = None
+    cancelled_qty: int = 0
+    avg_executed_price: Optional[float] = None
+    
+    # Broker details
+    broker_order_id: Optional[str] = None
+    exchange_order_id: Optional[str] = None
+    exchange: Optional[str] = None
+    rejection_reason: Optional[str] = None
+    status_message: Optional[str] = None
+    
+    # Timestamps
+    timestamp: datetime  # Mapped from placed_at
+    placed_at: datetime
+    executed_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    created_at: datetime  # Mapped from placed_at
 
     class Config:
         from_attributes = True

@@ -1,0 +1,1452 @@
+{
+  "api_title": "Nifties API - Trading Platform",
+  "api_version": "1.0.0",
+  "base_url": "http://localhost:8000",
+  "authentication": {
+    "type": "Bearer Token (JWT)",
+    "header": "Authorization: Bearer {token}",
+    "description": "Most endpoints require authentication. Include JWT token in Authorization header."
+  },
+  "endpoints": [
+    {
+      "category": "Authentication",
+      "tag": "authentication",
+      "endpoints": [
+        {
+          "name": "Login",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "description": "Authenticate user and return JWT token",
+          "requires_auth": false,
+          "request_payload": {
+            "email": "user@example.com",
+            "password": "password123"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+              "token_type": "bearer",
+              "user": {
+                "id": 1,
+                "email": "user@example.com",
+                "name": "John Doe",
+                "role": "user",
+                "is_active": true,
+                "created_at": "2025-01-01T10:00:00Z",
+                "updated_at": "2025-01-01T10:00:00Z"
+              }
+            }
+          },
+          "error_response": {
+            "status": 401,
+            "message": "Invalid email or password"
+          }
+        },
+        {
+          "name": "Register",
+          "method": "POST",
+          "path": "/api/auth/register",
+          "description": "Register new user",
+          "requires_auth": false,
+          "request_payload": {
+            "email": "newuser@example.com",
+            "password": "SecurePass123",
+            "name": "New User",
+            "role": "user"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 2,
+              "email": "newuser@example.com",
+              "name": "New User",
+              "role": "user",
+              "is_active": true,
+              "created_at": "2025-01-01T10:00:00Z",
+              "updated_at": "2025-01-01T10:00:00Z"
+            }
+          },
+          "error_response": {
+            "status": 400,
+            "message": "Email already registered"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "method": "POST",
+          "path": "/api/auth/refresh",
+          "description": "Refresh JWT token",
+          "requires_auth": true,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": {
+              "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+              "token_type": "bearer",
+              "expires_in": 1800
+            }
+          }
+        }
+      ]
+    },
+    {
+      "category": "Users",
+      "tag": "users",
+      "endpoints": [
+        {
+          "name": "Get Current User Profile",
+          "method": "GET",
+          "path": "/api/users/me",
+          "description": "Get current authenticated user profile",
+          "requires_auth": true,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "email": "user@example.com",
+              "name": "John Doe",
+              "role": "user",
+              "is_active": true,
+              "created_at": "2025-01-01T10:00:00Z",
+              "updated_at": "2025-01-01T10:00:00Z"
+            },
+            "message": null
+          }
+        },
+        {
+          "name": "Update Current User",
+          "method": "PUT",
+          "path": "/api/users/me",
+          "description": "Update current user profile",
+          "requires_auth": true,
+          "request_payload": {
+            "name": "John Updated",
+            "email": "john.updated@example.com"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "email": "john.updated@example.com",
+              "name": "John Updated",
+              "role": "user",
+              "is_active": true,
+              "created_at": "2025-01-01T10:00:00Z",
+              "updated_at": "2025-01-17T15:30:00Z"
+            },
+            "message": "User profile updated successfully"
+          }
+        },
+        {
+          "name": "Get All Users",
+          "method": "GET",
+          "path": "/api/users",
+          "description": "Get all users (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "email": "admin@example.com",
+                "name": "Admin User",
+                "role": "admin",
+                "is_active": true,
+                "created_at": "2025-01-01T10:00:00Z",
+                "updated_at": "2025-01-01T10:00:00Z"
+              }
+            ],
+            "message": "Users retrieved successfully"
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "method": "GET",
+          "path": "/api/users/{user_id}",
+          "description": "Get specific user by ID",
+          "requires_auth": true,
+          "path_parameters": {
+            "user_id": "integer"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "email": "user@example.com",
+              "name": "John Doe",
+              "role": "user",
+              "is_active": true,
+              "created_at": "2025-01-01T10:00:00Z",
+              "updated_at": "2025-01-01T10:00:00Z"
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "method": "DELETE",
+          "path": "/api/users/{user_id}",
+          "description": "Delete user (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "path_parameters": {
+            "user_id": "integer"
+          },
+          "success_response": {
+            "status": 204,
+            "data": null
+          }
+        },
+        {
+          "name": "Activate User",
+          "method": "POST",
+          "path": "/api/users/{user_id}/activate",
+          "description": "Activate user (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "path_parameters": {
+            "user_id": "integer"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "email": "user@example.com",
+              "name": "John Doe",
+              "role": "user",
+              "is_active": true,
+              "created_at": "2025-01-01T10:00:00Z",
+              "updated_at": "2025-01-17T15:30:00Z"
+            },
+            "message": "User activated successfully"
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "method": "POST",
+          "path": "/api/users/{user_id}/deactivate",
+          "description": "Deactivate user (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "path_parameters": {
+            "user_id": "integer"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "email": "user@example.com",
+              "name": "John Doe",
+              "role": "user",
+              "is_active": false,
+              "created_at": "2025-01-01T10:00:00Z",
+              "updated_at": "2025-01-17T15:30:00Z"
+            },
+            "message": "User deactivated successfully"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Market Data",
+      "tag": "market",
+      "endpoints": [
+        {
+          "name": "Get Market Indices",
+          "method": "GET",
+          "path": "/api/market/indices",
+          "description": "Get all market indices",
+          "requires_auth": false,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "name": "NIFTY 50",
+                "value": 21894.5,
+                "change": 125.3,
+                "change_percent": 0.58,
+                "is_positive": true,
+                "timestamp": "2025-01-17T15:30:00Z"
+              },
+              {
+                "id": 2,
+                "name": "BANKNIFTY",
+                "value": 45678.25,
+                "change": -89.75,
+                "change_percent": -0.2,
+                "is_positive": false,
+                "timestamp": "2025-01-17T15:30:00Z"
+              }
+            ],
+            "message": "Market indices retrieved successfully"
+          }
+        },
+        {
+          "name": "Get Index by Name",
+          "method": "GET",
+          "path": "/api/market/indices/{name}",
+          "description": "Get market index by name",
+          "requires_auth": false,
+          "path_parameters": {
+            "name": "string (e.g., 'NIFTY 50', 'BANKNIFTY')"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "name": "NIFTY 50",
+              "value": 21894.5,
+              "change": 125.3,
+              "change_percent": 0.58,
+              "is_positive": true,
+              "timestamp": "2025-01-17T15:30:00Z"
+            }
+          }
+        },
+        {
+          "name": "Create Market Index",
+          "method": "POST",
+          "path": "/api/market/indices",
+          "description": "Create new market index (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "request_payload": {
+            "name": "SENSEX",
+            "value": 72500.0,
+            "change": 150.0,
+            "change_percent": 0.21,
+            "is_positive": true
+          },
+          "success_response": {
+            "status": 201,
+            "data": {
+              "id": 3,
+              "name": "SENSEX",
+              "value": 72500.0,
+              "change": 150.0,
+              "change_percent": 0.21,
+              "is_positive": true,
+              "timestamp": "2025-01-17T15:30:00Z"
+            },
+            "message": "Market index created successfully"
+          }
+        },
+        {
+          "name": "Update Market Index",
+          "method": "PUT",
+          "path": "/api/market/indices/{index_id}",
+          "description": "Update market index (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "path_parameters": {
+            "index_id": "integer"
+          },
+          "request_payload": {
+            "value": 21900.0,
+            "change": 130.8,
+            "change_percent": 0.6,
+            "is_positive": true
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "name": "NIFTY 50",
+              "value": 21900.0,
+              "change": 130.8,
+              "change_percent": 0.6,
+              "is_positive": true,
+              "timestamp": "2025-01-17T15:35:00Z"
+            },
+            "message": "Market index updated successfully"
+          }
+        },
+        {
+          "name": "Delete Market Index",
+          "method": "DELETE",
+          "path": "/api/market/indices/{index_id}",
+          "description": "Delete market index (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "path_parameters": {
+            "index_id": "integer"
+          },
+          "success_response": {
+            "status": 204,
+            "data": null
+          }
+        },
+        {
+          "name": "Get PnL Data",
+          "method": "GET",
+          "path": "/api/market/pnl",
+          "description": "Get all P&L records",
+          "requires_auth": false,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "period": "today",
+                "value": 12450.0,
+                "is_positive": true,
+                "description": "+8.5% from yesterday",
+                "trades": 8,
+                "timestamp": "2025-01-17T15:30:00Z"
+              },
+              {
+                "id": 2,
+                "period": "week",
+                "value": 45230.0,
+                "is_positive": true,
+                "description": "12 winning trades",
+                "trades": 12,
+                "timestamp": "2025-01-17T15:30:00Z"
+              },
+              {
+                "id": 3,
+                "period": "month",
+                "value": 123450.0,
+                "is_positive": true,
+                "description": "45 total trades",
+                "trades": 45,
+                "timestamp": "2025-01-17T15:30:00Z"
+              }
+            ],
+            "message": "PnL data retrieved successfully"
+          }
+        },
+        {
+          "name": "Get PnL by Period",
+          "method": "GET",
+          "path": "/api/market/pnl/{period}",
+          "description": "Get P&L for specific period (today, week, month)",
+          "requires_auth": false,
+          "path_parameters": {
+            "period": "string (today, week, month)"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "period": "today",
+              "value": 12450.0,
+              "is_positive": true,
+              "description": "+8.5% from yesterday",
+              "trades": 8,
+              "timestamp": "2025-01-17T15:30:00Z"
+            }
+          }
+        },
+        {
+          "name": "Create PnL",
+          "method": "POST",
+          "path": "/api/market/pnl",
+          "description": "Create PnL record (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "request_payload": {
+            "period": "today",
+            "value": 15000.0,
+            "is_positive": true,
+            "description": "Great trading day",
+            "trades": 10
+          },
+          "success_response": {
+            "status": 201,
+            "data": {
+              "id": 4,
+              "period": "today",
+              "value": 15000.0,
+              "is_positive": true,
+              "description": "Great trading day",
+              "trades": 10,
+              "timestamp": "2025-01-17T15:30:00Z"
+            },
+            "message": "PnL record created successfully"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Trades",
+      "tag": "trades",
+      "endpoints": [
+        {
+          "name": "Get All Trades",
+          "method": "GET",
+          "path": "/api/trades",
+          "description": "Get all trades for current user",
+          "requires_auth": true,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "user_id": 1,
+                "symbol": "NIFTY 21900 CE",
+                "index": "NIFTY",
+                "strike": 21900,
+                "type": "CE",
+                "qty": 50,
+                "entry_price": 125.5,
+                "current_price": 142.3,
+                "pnl": 840.0,
+                "pnl_percent": 13.4,
+                "status": "ACTIVE",
+                "strategy": "Straddle Strategy",
+                "timestamp": "2025-01-17T10:15:00Z",
+                "created_at": "2025-01-17T10:15:00Z",
+                "updated_at": "2025-01-17T10:15:00Z"
+              }
+            ],
+            "message": "Trades retrieved successfully"
+          }
+        },
+        {
+          "name": "Get Trade by ID",
+          "method": "GET",
+          "path": "/api/trades/{trade_id}",
+          "description": "Get specific trade by ID",
+          "requires_auth": true,
+          "path_parameters": {
+            "trade_id": "integer"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "user_id": 1,
+              "symbol": "NIFTY 21900 CE",
+              "index": "NIFTY",
+              "strike": 21900,
+              "type": "CE",
+              "qty": 50,
+              "entry_price": 125.5,
+              "current_price": 142.3,
+              "pnl": 840.0,
+              "pnl_percent": 13.4,
+              "status": "ACTIVE",
+              "strategy": "Straddle Strategy",
+              "timestamp": "2025-01-17T10:15:00Z",
+              "created_at": "2025-01-17T10:15:00Z",
+              "updated_at": "2025-01-17T10:15:00Z"
+            }
+          }
+        },
+        {
+          "name": "Create Trade",
+          "method": "POST",
+          "path": "/api/trades",
+          "description": "Create new trade",
+          "requires_auth": true,
+          "request_payload": {
+            "symbol": "BANKNIFTY 45500 PE",
+            "index": "BANKNIFTY",
+            "strike": 45500,
+            "type": "PE",
+            "qty": 25,
+            "entry_price": 180.5,
+            "current_price": 180.5,
+            "status": "ACTIVE",
+            "strategy": "Iron Condor"
+          },
+          "success_response": {
+            "status": 201,
+            "data": {
+              "id": 2,
+              "user_id": 1,
+              "symbol": "BANKNIFTY 45500 PE",
+              "index": "BANKNIFTY",
+              "strike": 45500,
+              "type": "PE",
+              "qty": 25,
+              "entry_price": 180.5,
+              "current_price": 180.5,
+              "pnl": 0.0,
+              "pnl_percent": 0.0,
+              "status": "ACTIVE",
+              "strategy": "Iron Condor",
+              "timestamp": "2025-01-17T15:30:00Z",
+              "created_at": "2025-01-17T15:30:00Z",
+              "updated_at": "2025-01-17T15:30:00Z"
+            },
+            "message": "Trade created successfully"
+          }
+        },
+        {
+          "name": "Update Trade",
+          "method": "PUT",
+          "path": "/api/trades/{trade_id}",
+          "description": "Update trade",
+          "requires_auth": true,
+          "path_parameters": {
+            "trade_id": "integer"
+          },
+          "request_payload": {
+            "current_price": 150.0,
+            "status": "ACTIVE"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "user_id": 1,
+              "symbol": "NIFTY 21900 CE",
+              "index": "NIFTY",
+              "strike": 21900,
+              "type": "CE",
+              "qty": 50,
+              "entry_price": 125.5,
+              "current_price": 150.0,
+              "pnl": 1225.0,
+              "pnl_percent": 19.52,
+              "status": "ACTIVE",
+              "strategy": "Straddle Strategy",
+              "timestamp": "2025-01-17T10:15:00Z",
+              "created_at": "2025-01-17T10:15:00Z",
+              "updated_at": "2025-01-17T15:30:00Z"
+            },
+            "message": "Trade updated successfully"
+          }
+        },
+        {
+          "name": "Delete Trade",
+          "method": "DELETE",
+          "path": "/api/trades/{trade_id}",
+          "description": "Delete trade",
+          "requires_auth": true,
+          "path_parameters": {
+            "trade_id": "integer"
+          },
+          "success_response": {
+            "status": 204,
+            "data": null
+          }
+        },
+        {
+          "name": "Get Active Trades",
+          "method": "GET",
+          "path": "/api/trades/active/all",
+          "description": "Get active trades for current user",
+          "requires_auth": true,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "user_id": 1,
+                "symbol": "NIFTY 21900 CE",
+                "index": "NIFTY",
+                "strike": 21900,
+                "type": "CE",
+                "qty": 50,
+                "entry_price": 125.5,
+                "current_price": 142.3,
+                "pnl": 840.0,
+                "pnl_percent": 13.4,
+                "status": "ACTIVE",
+                "strategy": "Straddle Strategy",
+                "timestamp": "2025-01-17T10:15:00Z",
+                "created_at": "2025-01-17T10:15:00Z",
+                "updated_at": "2025-01-17T10:15:00Z"
+              }
+            ],
+            "message": "Active trades retrieved successfully"
+          }
+        },
+        {
+          "name": "Close Trade",
+          "method": "POST",
+          "path": "/api/trades/{trade_id}/close",
+          "description": "Close trade with final price",
+          "requires_auth": true,
+          "path_parameters": {
+            "trade_id": "integer"
+          },
+          "query_parameters": {
+            "closing_price": "float"
+          },
+          "request_example": "/api/trades/1/close?closing_price=155.5",
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "user_id": 1,
+              "symbol": "NIFTY 21900 CE",
+              "index": "NIFTY",
+              "strike": 21900,
+              "type": "CE",
+              "qty": 50,
+              "entry_price": 125.5,
+              "current_price": 155.5,
+              "pnl": 1500.0,
+              "pnl_percent": 23.9,
+              "status": "CLOSED",
+              "strategy": "Straddle Strategy",
+              "timestamp": "2025-01-17T10:15:00Z",
+              "created_at": "2025-01-17T10:15:00Z",
+              "updated_at": "2025-01-17T15:30:00Z"
+            },
+            "message": "Trade closed successfully"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Orders",
+      "tag": "orders",
+      "endpoints": [
+        {
+          "name": "Get All Orders",
+          "method": "GET",
+          "path": "/api/orders",
+          "description": "Get all orders for current user",
+          "requires_auth": true,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": "ORD001",
+                "user_id": 1,
+                "symbol": "NIFTY 21900 CE",
+                "order_type": "BUY",
+                "qty": 50,
+                "price": 125.5,
+                "status": "COMPLETED",
+                "executed_price": 125.5,
+                "executed_qty": 50,
+                "timestamp": "2025-01-16T09:30:00Z",
+                "created_at": "2025-01-16T09:30:00Z",
+                "updated_at": "2025-01-16T09:30:15Z"
+              }
+            ],
+            "message": "Orders retrieved successfully"
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "method": "GET",
+          "path": "/api/orders/{order_id}",
+          "description": "Get specific order by ID",
+          "requires_auth": true,
+          "path_parameters": {
+            "order_id": "string"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": "ORD001",
+              "user_id": 1,
+              "symbol": "NIFTY 21900 CE",
+              "order_type": "BUY",
+              "qty": 50,
+              "price": 125.5,
+              "status": "COMPLETED",
+              "executed_price": 125.5,
+              "executed_qty": 50,
+              "timestamp": "2025-01-16T09:30:00Z",
+              "created_at": "2025-01-16T09:30:00Z",
+              "updated_at": "2025-01-16T09:30:15Z"
+            }
+          }
+        },
+        {
+          "name": "Create Order",
+          "method": "POST",
+          "path": "/api/orders",
+          "description": "Create new order",
+          "requires_auth": true,
+          "request_payload": {
+            "symbol": "BANKNIFTY 45500 PE",
+            "order_type": "BUY",
+            "qty": 25,
+            "price": 180.5,
+            "status": "PENDING"
+          },
+          "success_response": {
+            "status": 201,
+            "data": {
+              "id": "ORD002",
+              "user_id": 1,
+              "symbol": "BANKNIFTY 45500 PE",
+              "order_type": "BUY",
+              "qty": 25,
+              "price": 180.5,
+              "status": "PENDING",
+              "executed_price": null,
+              "executed_qty": null,
+              "timestamp": "2025-01-17T15:30:00Z",
+              "created_at": "2025-01-17T15:30:00Z",
+              "updated_at": "2025-01-17T15:30:00Z"
+            },
+            "message": "Order created successfully"
+          }
+        },
+        {
+          "name": "Update Order",
+          "method": "PUT",
+          "path": "/api/orders/{order_id}",
+          "description": "Update order",
+          "requires_auth": true,
+          "path_parameters": {
+            "order_id": "string"
+          },
+          "request_payload": {
+            "status": "COMPLETED",
+            "executed_price": 180.75,
+            "executed_qty": 25
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": "ORD002",
+              "user_id": 1,
+              "symbol": "BANKNIFTY 45500 PE",
+              "order_type": "BUY",
+              "qty": 25,
+              "price": 180.5,
+              "status": "COMPLETED",
+              "executed_price": 180.75,
+              "executed_qty": 25,
+              "timestamp": "2025-01-17T15:30:00Z",
+              "created_at": "2025-01-17T15:30:00Z",
+              "updated_at": "2025-01-17T15:30:30Z"
+            },
+            "message": "Order updated successfully"
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "method": "PATCH",
+          "path": "/api/orders/{order_id}/cancel",
+          "description": "Cancel order",
+          "requires_auth": true,
+          "path_parameters": {
+            "order_id": "string"
+          },
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": "ORD002",
+              "user_id": 1,
+              "symbol": "BANKNIFTY 45500 PE",
+              "order_type": "BUY",
+              "qty": 25,
+              "price": 180.5,
+              "status": "CANCELLED",
+              "executed_price": null,
+              "executed_qty": null,
+              "timestamp": "2025-01-17T15:30:00Z",
+              "created_at": "2025-01-17T15:30:00Z",
+              "updated_at": "2025-01-17T15:31:00Z"
+            },
+            "message": "Order cancelled successfully"
+          }
+        },
+        {
+          "name": "Delete Order",
+          "method": "DELETE",
+          "path": "/api/orders/{order_id}",
+          "description": "Delete order",
+          "requires_auth": true,
+          "path_parameters": {
+            "order_id": "string"
+          },
+          "success_response": {
+            "status": 204,
+            "data": null
+          }
+        }
+      ]
+    },
+    {
+      "category": "Strategies",
+      "tag": "strategies",
+      "endpoints": [
+        {
+          "name": "Get All Strategies",
+          "method": "GET",
+          "path": "/api/strategies",
+          "description": "Get all strategies for current user",
+          "requires_auth": true,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "user_id": 1,
+                "name": "Straddle Strategy",
+                "index": "NIFTY",
+                "status": "ACTIVE",
+                "description": "Long straddle on NIFTY index with CE and PE contracts",
+                "profit_target": 500.0,
+                "stop_loss": 200.0,
+                "current_pnl": 840.0,
+                "trades": 12,
+                "win_rate": 75.0,
+                "entry_date": "2025-01-10T09:30:00Z",
+                "created_at": "2025-01-10T09:30:00Z",
+                "updated_at": "2025-01-17T15:30:00Z"
+              }
+            ],
+            "message": "Strategies retrieved successfully"
+          }
+        },
+        {
+          "name": "Get Strategy by ID",
+          "method": "GET",
+          "path": "/api/strategies/{strategy_id}",
+          "description": "Get specific strategy by ID",
+          "requires_auth": true,
+          "path_parameters": {
+            "strategy_id": "integer"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "user_id": 1,
+              "name": "Straddle Strategy",
+              "index": "NIFTY",
+              "status": "ACTIVE",
+              "description": "Long straddle on NIFTY index with CE and PE contracts",
+              "profit_target": 500.0,
+              "stop_loss": 200.0,
+              "current_pnl": 840.0,
+              "trades": 12,
+              "win_rate": 75.0,
+              "entry_date": "2025-01-10T09:30:00Z",
+              "created_at": "2025-01-10T09:30:00Z",
+              "updated_at": "2025-01-17T15:30:00Z"
+            }
+          }
+        },
+        {
+          "name": "Create Strategy",
+          "method": "POST",
+          "path": "/api/strategies",
+          "description": "Create new strategy",
+          "requires_auth": true,
+          "request_payload": {
+            "name": "Iron Condor Strategy",
+            "index": "BANKNIFTY",
+            "status": "ACTIVE",
+            "description": "Iron condor strategy with defined risk",
+            "profit_target": 1000.0,
+            "stop_loss": 500.0
+          },
+          "success_response": {
+            "status": 201,
+            "data": {
+              "id": 2,
+              "user_id": 1,
+              "name": "Iron Condor Strategy",
+              "index": "BANKNIFTY",
+              "status": "ACTIVE",
+              "description": "Iron condor strategy with defined risk",
+              "profit_target": 1000.0,
+              "stop_loss": 500.0,
+              "current_pnl": 0.0,
+              "trades": 0,
+              "win_rate": 0.0,
+              "entry_date": "2025-01-17T15:30:00Z",
+              "created_at": "2025-01-17T15:30:00Z",
+              "updated_at": "2025-01-17T15:30:00Z"
+            },
+            "message": "Strategy created successfully"
+          }
+        },
+        {
+          "name": "Update Strategy",
+          "method": "PUT",
+          "path": "/api/strategies/{strategy_id}",
+          "description": "Update strategy",
+          "requires_auth": true,
+          "path_parameters": {
+            "strategy_id": "integer"
+          },
+          "request_payload": {
+            "status": "INACTIVE",
+            "profit_target": 1200.0
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "user_id": 1,
+              "name": "Straddle Strategy",
+              "index": "NIFTY",
+              "status": "INACTIVE",
+              "description": "Long straddle on NIFTY index with CE and PE contracts",
+              "profit_target": 1200.0,
+              "stop_loss": 200.0,
+              "current_pnl": 840.0,
+              "trades": 12,
+              "win_rate": 75.0,
+              "entry_date": "2025-01-10T09:30:00Z",
+              "created_at": "2025-01-10T09:30:00Z",
+              "updated_at": "2025-01-17T15:35:00Z"
+            },
+            "message": "Strategy updated successfully"
+          }
+        },
+        {
+          "name": "Delete Strategy",
+          "method": "DELETE",
+          "path": "/api/strategies/{strategy_id}",
+          "description": "Delete strategy",
+          "requires_auth": true,
+          "path_parameters": {
+            "strategy_id": "integer"
+          },
+          "success_response": {
+            "status": 204,
+            "data": null
+          }
+        },
+        {
+          "name": "Get Active Strategies",
+          "method": "GET",
+          "path": "/api/strategies/active/all",
+          "description": "Get active strategies for current user",
+          "requires_auth": true,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "user_id": 1,
+                "name": "Straddle Strategy",
+                "index": "NIFTY",
+                "status": "ACTIVE",
+                "description": "Long straddle on NIFTY index with CE and PE contracts",
+                "profit_target": 500.0,
+                "stop_loss": 200.0,
+                "current_pnl": 840.0,
+                "trades": 12,
+                "win_rate": 75.0,
+                "entry_date": "2025-01-10T09:30:00Z",
+                "created_at": "2025-01-10T09:30:00Z",
+                "updated_at": "2025-01-17T15:30:00Z"
+              }
+            ],
+            "message": "Active strategies retrieved successfully"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Analytics",
+      "tag": "analytics",
+      "endpoints": [
+        {
+          "name": "Get Analytics",
+          "method": "GET",
+          "path": "/api/analytics",
+          "description": "Get all analytics records",
+          "requires_auth": true,
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "date": "2025-01-17",
+                "total_trades": 15,
+                "winning_trades": 11,
+                "losing_trades": 4,
+                "win_rate": 73.3,
+                "total_pnl": 2082.0,
+                "average_win": 189.27,
+                "average_loss": 120.5,
+                "profit_factor": 1.57,
+                "created_at": "2025-01-17T23:59:00Z",
+                "updated_at": "2025-01-17T23:59:00Z"
+              }
+            ],
+            "message": "Analytics retrieved successfully"
+          }
+        },
+        {
+          "name": "Get Analytics by Date",
+          "method": "GET",
+          "path": "/api/analytics/date/{date}",
+          "description": "Get analytics for specific date (YYYY-MM-DD format)",
+          "requires_auth": true,
+          "path_parameters": {
+            "date": "string (YYYY-MM-DD format)"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "date": "2025-01-17",
+              "total_trades": 15,
+              "winning_trades": 11,
+              "losing_trades": 4,
+              "win_rate": 73.3,
+              "total_pnl": 2082.0,
+              "average_win": 189.27,
+              "average_loss": 120.5,
+              "profit_factor": 1.57,
+              "created_at": "2025-01-17T23:59:00Z",
+              "updated_at": "2025-01-17T23:59:00Z"
+            }
+          }
+        },
+        {
+          "name": "Create Analytics",
+          "method": "POST",
+          "path": "/api/analytics",
+          "description": "Create analytics record (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "request_payload": {
+            "date": "2025-01-18",
+            "total_trades": 20,
+            "winning_trades": 15,
+            "losing_trades": 5,
+            "total_pnl": 3500.0
+          },
+          "success_response": {
+            "status": 201,
+            "data": {
+              "id": 2,
+              "date": "2025-01-18",
+              "total_trades": 20,
+              "winning_trades": 15,
+              "losing_trades": 5,
+              "win_rate": 75.0,
+              "total_pnl": 3500.0,
+              "average_win": 233.33,
+              "average_loss": 0.0,
+              "profit_factor": 0.0,
+              "created_at": "2025-01-18T15:30:00Z",
+              "updated_at": "2025-01-18T15:30:00Z"
+            },
+            "message": "Analytics record created successfully"
+          }
+        },
+        {
+          "name": "Get Analytics Range",
+          "method": "GET",
+          "path": "/api/analytics/range",
+          "description": "Get analytics for date range",
+          "requires_auth": true,
+          "query_parameters": {
+            "start_date": "string (YYYY-MM-DD)",
+            "end_date": "string (YYYY-MM-DD)"
+          },
+          "request_example": "/api/analytics/range?start_date=2025-01-01&end_date=2025-01-17",
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "date": "2025-01-17",
+                "total_trades": 15,
+                "winning_trades": 11,
+                "losing_trades": 4,
+                "win_rate": 73.3,
+                "total_pnl": 2082.0,
+                "average_win": 189.27,
+                "average_loss": 120.5,
+                "profit_factor": 1.57,
+                "created_at": "2025-01-17T23:59:00Z",
+                "updated_at": "2025-01-17T23:59:00Z"
+              }
+            ],
+            "message": "Analytics retrieved for range 2025-01-01 to 2025-01-17"
+          }
+        },
+        {
+          "name": "Get Latest Analytics",
+          "method": "GET",
+          "path": "/api/analytics/latest",
+          "description": "Get latest analytics records",
+          "requires_auth": true,
+          "query_parameters": {
+            "days": "integer (1-365, default: 30)"
+          },
+          "request_example": "/api/analytics/latest?days=7",
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "date": "2025-01-17",
+                "total_trades": 15,
+                "winning_trades": 11,
+                "losing_trades": 4,
+                "win_rate": 73.3,
+                "total_pnl": 2082.0,
+                "average_win": 189.27,
+                "average_loss": 120.5,
+                "profit_factor": 1.57,
+                "created_at": "2025-01-17T23:59:00Z",
+                "updated_at": "2025-01-17T23:59:00Z"
+              }
+            ],
+            "message": "Latest 7 analytics records retrieved"
+          }
+        }
+      ]
+    },
+    {
+      "category": "Alerts",
+      "tag": "alerts",
+      "endpoints": [
+        {
+          "name": "Get Alerts",
+          "method": "GET",
+          "path": "/api/alerts",
+          "description": "Get all alerts for current user",
+          "requires_auth": true,
+          "query_parameters": {
+            "is_read": "boolean (optional, filter by read status)"
+          },
+          "request_example": "/api/alerts?is_read=false",
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "message": "Order filled: NIFTY 21900 CE",
+                "alert_type": "success",
+                "timestamp": "2025-01-17T15:43:00Z",
+                "is_read": false
+              },
+              {
+                "id": 2,
+                "message": "Stop loss triggered on BANKNIFTY trade",
+                "alert_type": "warning",
+                "timestamp": "2025-01-17T15:30:00Z",
+                "is_read": false
+              }
+            ],
+            "message": "Retrieved 2 alerts"
+          }
+        },
+        {
+          "name": "Get Alert by ID",
+          "method": "GET",
+          "path": "/api/alerts/{alert_id}",
+          "description": "Get specific alert by ID",
+          "requires_auth": true,
+          "path_parameters": {
+            "alert_id": "integer"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "message": "Order filled: NIFTY 21900 CE",
+              "alert_type": "success",
+              "timestamp": "2025-01-17T15:43:00Z",
+              "is_read": false
+            }
+          }
+        },
+        {
+          "name": "Create Alert",
+          "method": "POST",
+          "path": "/api/alerts",
+          "description": "Create new alert for current user",
+          "requires_auth": true,
+          "request_payload": {
+            "message": "Trade target reached",
+            "alert_type": "success"
+          },
+          "success_response": {
+            "status": 201,
+            "data": {
+              "id": 3,
+              "message": "Trade target reached",
+              "alert_type": "success",
+              "timestamp": "2025-01-17T15:45:00Z",
+              "is_read": false
+            },
+            "message": "Alert created successfully"
+          }
+        },
+        {
+          "name": "Mark Alert as Read",
+          "method": "PATCH",
+          "path": "/api/alerts/{alert_id}/read",
+          "description": "Mark alert as read",
+          "requires_auth": true,
+          "path_parameters": {
+            "alert_id": "integer"
+          },
+          "request_payload": null,
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "message": "Order filled: NIFTY 21900 CE",
+              "alert_type": "success",
+              "timestamp": "2025-01-17T15:43:00Z",
+              "is_read": true
+            },
+            "message": "Alert marked as read"
+          }
+        },
+        {
+          "name": "Delete Alert",
+          "method": "DELETE",
+          "path": "/api/alerts/{alert_id}",
+          "description": "Delete alert",
+          "requires_auth": true,
+          "path_parameters": {
+            "alert_id": "integer"
+          },
+          "success_response": {
+            "status": 204,
+            "data": null
+          }
+        }
+      ]
+    },
+    {
+      "category": "Logs",
+      "tag": "logs",
+      "endpoints": [
+        {
+          "name": "Get Logs",
+          "method": "GET",
+          "path": "/api/logs",
+          "description": "Get system logs (Admin: all logs, Users: own logs)",
+          "requires_auth": true,
+          "query_parameters": {
+            "level": "string (optional: DEBUG, INFO, WARNING, ERROR)",
+            "category": "string (optional)",
+            "limit": "integer (1-500, default: 100)"
+          },
+          "request_example": "/api/logs?level=ERROR&limit=50",
+          "success_response": {
+            "status": 200,
+            "data": [
+              {
+                "id": 1,
+                "timestamp": "2025-01-17T15:45:23Z",
+                "level": "INFO",
+                "message": "Strategy 'Straddle Strategy' executed 5 contracts",
+                "category": "STRATEGY",
+                "source": "AlgoEngine",
+                "user_id": 1,
+                "metadata": null
+              },
+              {
+                "id": 2,
+                "timestamp": "2025-01-17T15:44:10Z",
+                "level": "WARNING",
+                "message": "Stop loss triggered on BANKNIFTY trade",
+                "category": "TRADE",
+                "source": "RiskManager",
+                "user_id": 1,
+                "metadata": "{\"trade_id\": 5}"
+              }
+            ],
+            "message": "Retrieved 2 log entries"
+          }
+        },
+        {
+          "name": "Get Log by ID",
+          "method": "GET",
+          "path": "/api/logs/{log_id}",
+          "description": "Get specific log entry by ID",
+          "requires_auth": true,
+          "path_parameters": {
+            "log_id": "integer"
+          },
+          "success_response": {
+            "status": 200,
+            "data": {
+              "id": 1,
+              "timestamp": "2025-01-17T15:45:23Z",
+              "level": "INFO",
+              "message": "Strategy 'Straddle Strategy' executed 5 contracts",
+              "category": "STRATEGY",
+              "source": "AlgoEngine",
+              "user_id": 1,
+              "metadata": null
+            }
+          }
+        },
+        {
+          "name": "Create Log",
+          "method": "POST",
+          "path": "/api/logs",
+          "description": "Create new log entry (Admin only)",
+          "requires_auth": true,
+          "requires_admin": true,
+          "request_payload": {
+            "level": "INFO",
+            "message": "System maintenance completed",
+            "category": "SYSTEM",
+            "source": "MaintenanceService",
+            "user_id": null,
+            "metadata": "{\"duration\": \"5 minutes\"}"
+          },
+          "success_response": {
+            "status": 201,
+            "data": {
+              "id": 3,
+              "timestamp": "2025-01-17T15:50:00Z",
+              "level": "INFO",
+              "message": "System maintenance completed",
+              "category": "SYSTEM",
+              "source": "MaintenanceService",
+              "user_id": null,
+              "metadata": "{\"duration\": \"5 minutes\"}"
+            },
+            "message": "Log entry created successfully"
+          }
+        }
+      ]
+    }
+  ],
+  "enums": {
+    "TradeStatus": ["ACTIVE", "CLOSED", "PENDING"],
+    "OrderStatus": ["PENDING", "COMPLETED", "CANCELLED", "REJECTED"],
+    "StrategyStatus": ["ACTIVE", "INACTIVE", "COMPLETED"],
+    "UserRole": ["admin", "trader", "user"],
+    "AlertType": ["success", "warning", "error", "info"],
+    "LogLevel": ["DEBUG", "INFO", "WARNING", "ERROR"]
+  },
+  "error_responses": {
+    "400": {
+      "status": 400,
+      "message": "Bad Request - Invalid parameters or data"
+    },
+    "401": {
+      "status": 401,
+      "message": "Unauthorized - Missing or invalid authentication token"
+    },
+    "403": {
+      "status": 403,
+      "message": "Forbidden - Not authorized to access this resource"
+    },
+    "404": {
+      "status": 404,
+      "message": "Not Found - Resource not found"
+    },
+    "500": {
+      "status": 500,
+      "message": "Internal Server Error - Server error occurred"
+    }
+  }
+}
