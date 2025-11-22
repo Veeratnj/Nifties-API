@@ -49,6 +49,10 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok","version": API_VERSION}
+
 # Add middleware in order (innermost to outermost)
 app.add_middleware(ErrorHandlingMiddleware)
 app.add_middleware(AuthMiddleware)

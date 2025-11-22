@@ -35,7 +35,7 @@ LOG_CATEGORIES = ["STRATEGY", "TRADE", "ORDER", "SYSTEM", "USER"]
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app/db/nifties.db")
 
 # ==================== API Configuration ====================
-API_VERSION = "0.1.0"
+API_VERSION = "0.0.1"
 API_TITLE = "Nifties API"
 API_DESCRIPTION = "Trading Platform API for Options Trading"
 
