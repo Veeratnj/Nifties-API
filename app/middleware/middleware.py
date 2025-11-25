@@ -86,7 +86,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """Middleware for authentication logging"""
     
     # Public endpoints that don't require authentication
-    PUBLIC_ENDPOINTS = ["/", "/health", "/api/auth/login", "/api/auth/register", "/docs", "/openapi.json"]
+    PUBLIC_ENDPOINTS = ["/", "/health", "/api/auth/login", "/api/auth/register", "/docs", "/openapi.json", "/redoc", "/db"]
     
     async def dispatch(self, request: Request, call_next) -> Response:
         # Check if endpoint is public
