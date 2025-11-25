@@ -7,7 +7,7 @@ Version: 2.0 - Cleaned and Optimized
 from sqlalchemy import (
     Column, Integer, String, ForeignKey, DateTime, 
     Float, Boolean, Numeric, Text, Index, UniqueConstraint,
-    Enum as SQLEnum, JSON
+    Enum as SQLEnum, JSON ,BigInteger
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -93,6 +93,59 @@ class CloseForEnum(str, enum.Enum):
     SENSEX = "SENSEX"
     BANKEX = "BANKEX"
     ALL = "ALL"
+
+
+class ExchangeEnum(str,enum.Enum):
+    NSE = "NSE"        # National Stock Exchange (Equity Cash)
+    BSE = "BSE"        # Bombay Stock Exchange (Equity Cash)
+    NFO = "NFO"        # NSE F&O (Index & Stock Derivatives)
+    BFO = "BFO"        # BSE F&O (less commonly used)
+    CDS = "CDS"        # NSE Currency (USDINR, EURINR)
+    BCD = "BCD"        # BSE Currency
+    MCX = "MCX"        # Multi Commodity Exchange (Gold, Silver, Crude, NG)
+    ALL = "ALL"        # All exchanges combined (internal use)
+    NSE_IDX = "NSE_IDX"    # Index quotes (internal classification)
+    BSE_IDX = "BSE_IDX"
+    SGX = "SGX"            # Singapore Exchange (NIFTY futures - now GIFT)
+    GIFT = "GIFT"          # NSE IFSC at GIFT City (International F&O)
+
+
+class InstrumentType(str,enum.Enum):
+    EQUITY = "EQUITY"          # Cash market stock (EQ)
+    ETF = "ETF"                # Exchange Traded Fund
+    INDEX = "INDEX"            # NIFTY, BANKNIFTY, FINNIFTY
+    FUT_INDEX = "FUTIDX"       # Index Future
+    FUT_STOCK = "FUTSTK"       # Stock Future
+    FUT_CURRENCY = "FUTCUR"    # Currency Future
+    FUT_COMMODITY = "FUTCOM"   # Commodity Future
+    OPT_INDEX = "OPTIDX"       # Index Option
+    OPT_STOCK = "OPTSTK"       # Stock Option
+    OPT_CURRENCY = "OPTCUR"    # Currency Option
+    OPT_COMMODITY = "OPTCOM"   # Commodity Option
+    CURRENCY_PAIR = "CURRENCY" # USDINR, EURINR, GBPINR, JPYINR
+    COMMODITY = "COMMODITY"    # MCX products like GOLD, SILVER
+    BOND = "BOND"              # Government/Corporate Bonds
+    DEBENTURE = "DEBENTURE"
+    MUTUAL_FUND = "MF"         # Mutual Funds
+    WARRANT = "WARRANT"
+    SGB = "SGB"                # Sovereign Gold Bond
+
+
+class TimeFrame(str,enum.Enum):
+    FIVE_SEC="5_SEC"
+    TEN_SEC="10_SEC"
+    FIFTEEN_SEC="15_SEC"
+    THIRTY_SEC="30_SEC"
+    ONE_MIN="1_MIN"
+    THREE_MIN="3_MIN"
+    FIVE_MIN="5_MIN"
+    FIFTEEN_MIN="15_MIN"
+    THIRTY_MIN="30_MIN"
+    SIXTY_MIN="60_MIN"
+    ONE_DAY="1_DAY"
+
+
+
 
 
 # ==================== USER MANAGEMENT ====================
@@ -402,7 +455,8 @@ class HistoricalData(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     symbol = Column(String(100), nullable=False, index=True)
-    timeframe = Column(String(10), nullable=False)  # 1m, 5m, 15m, 1h, 1d
+    # timeframe = Column(String(10), nullable=False)  # 1m, 5m, 15m, 1h, 1d
+    timeframe = Column(SQLEnum(TimeFrame), nullable=False)
     timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
     
     # OHLCV Data
@@ -1322,3 +1376,111 @@ class SystemSettings(Base):
     
     def __repr__(self):
         return f"<SystemSettings(key={self.key}, category={self.category})>"
+
+
+class SymbolMaster(Base):
+    """Master table for all tradable symbols"""
+    __tablename__ = 'symbol_master'
+    
+    # Primary Key
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Core Fields
+    token = Column(String(50), unique=True, nullable=False, index=True)
+    symbol = Column(String(100), unique=True, nullable=False, index=True)
+    trading_symbol = Column(String(100), nullable=False, index=True)
+    exchange = Column(SQLEnum(ExchangeEnum), nullable=False, index=True)
+    
+    # Instrument Details
+    instrument_type = Column(SQLEnum(InstrumentType), nullable=False, index=True)
+    segment = Column(String(20), nullable=False)  # EQ, FO
+    
+    # For Derivatives
+    strike_price = Column(Numeric(10, 2))
+    option_type = Column(String(2))  # CE, PE
+    expiry_date = Column(DateTime(timezone=True), index=True)
+    
+    # Trading Parameters
+    lot_size = Column(Integer, default=1)
+    tick_size = Column(Numeric(10, 6), default=0.05)
+    
+    # Status Fields
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    
+    # Audit Fields
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_by = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'))
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_by = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'))
+    
+    # Relationships
+    creator = relationship("User", foreign_keys=[created_by])
+    updater = relationship("User", foreign_keys=[updated_by])
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_symbol_active', 'is_active', 'is_deleted'),
+    )
+    
+    def __repr__(self):
+        return f"<SymbolMaster(id={self.id}, symbol={self.symbol}, token={self.token})>"
+
+
+
+class SpotTickData(Base):
+    """Raw tick data storage"""
+    __tablename__ = 'spot_tick_data'
+    
+    id = Column(BigInteger, primary_key=True, index=True)
+    symbol_id = Column(Integer, ForeignKey('symbol_master.id', ondelete='CASCADE'), nullable=False, index=True)
+    trade_date = Column(DateTime(timezone=True), nullable=False, index=True)  # ← ADD THIS for partitioning
+    timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
+
+    # Price Data
+    ltp = Column(Numeric(10, 2), nullable=False)
+
+    # Audit Fields
+    created_at = Column(DateTime(timezone=True), server_default=func.now(),nullable=True)
+    
+    # Relationships
+    symbol = relationship("SymbolMaster")
+   
+    # Indexes
+    __table_args__ = (
+        Index('idx_spot_tick_symbol_time', 'symbol_id', 'timestamp'),
+        Index('idx_spot_tick_date', 'trade_date'),
+    )
+    
+    def __repr__(self):
+        return f"<SpotTickData(id={self.id}, symbol_id={self.symbol_id}, ltp={self.ltp})>"
+
+
+class StrikePriceTickData(Base):
+    """Strike Price LTP data associated with spot symbols"""
+    __tablename__ = 'strike_price_tick_data'
+    
+    # Primary Key
+    id = Column(BigInteger, primary_key=True, index=True)
+    
+    # Foreign Keys
+    symbol_master_id = Column(Integer, ForeignKey('symbol_master.id', ondelete='CASCADE'), nullable=False, index=True)    
+    # Strike Price
+    strike_price = Column(Numeric(10, 2), nullable=False, index=True)
+    # LTP
+    ltp = Column(Numeric(10, 2), nullable=False)
+    # Timestamp
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+    # Indexes
+    __table_args__ = (
+        Index('idx_strike_price_spot_symbol', 'symbol_master_id', 'strike_price'),
+        Index('idx_strike_price_created', 'created_at'),
+    )
+    
+    def __repr__(self):
+        return f"<StrikePriceTickData(id={self.id}, spot_symbol_id={self.spot_symbol_id}, strike_price={self.strike_price}, ltp={self.ltp})>"
+
+
+
+
+

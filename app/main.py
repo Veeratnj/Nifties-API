@@ -25,6 +25,7 @@ from app.controllers import (
     nifties_opt_controller,
     log_controller,
     alert_controller,
+    tick_controller,
 )
 
 # Configure logging
@@ -91,6 +92,7 @@ def create_app():
     app.include_router(nifties_opt_controller.router)
     app.include_router(log_controller.router)
     app.include_router(alert_controller.router)
+    app.include_router(tick_controller.router)
     
     logger.info("All routers registered successfully")
     logger.info(f"API started on version {API_VERSION}")

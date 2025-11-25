@@ -4,6 +4,7 @@ Pydantic schemas for request/response validation
 
 from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional, List, Any, Generic, TypeVar
+from decimal import Decimal
 from datetime import datetime
 from enum import Enum
 
@@ -473,3 +474,35 @@ class PaginationSchema(BaseModel):
 #     gender: Optional[str] = None
 
 #     is_subscribe: Optional[bool] = None
+
+# Simple response model
+class ApiResponse(BaseModel):
+    success: bool
+    message: str
+    data: Optional[Any] = None
+
+
+class OHLCDataInsert(BaseModel):
+    symbol: str
+    timeframe: str
+    timestamp: datetime
+    open: Decimal
+    high: Decimal
+    low: Decimal
+    close: Decimal
+    volume: Optional[int] = Field(0, ge=0)
+
+
+class TickDataInsert(BaseModel):
+    token: str
+    timestamp: datetime
+    ltp:Decimal
+
+class StrikePriceLTPInsert(BaseModel):
+    strike_price_token: str
+    strike_price:int
+    ltp:Decimal
+    timestamp: datetime
+
+
+
