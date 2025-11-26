@@ -495,7 +495,7 @@ class Position(Base):
     # Quantity and Pricing
     qty = Column(Integer, nullable=False)
     avg_entry_price = Column(Numeric(10, 2), nullable=False)
-    current_price = Column(Numeric(10, 2))
+    avg_exit_price = Column(Numeric(10, 2),default=0 )
     
     # P&L
     realized_pnl = Column(Numeric(12, 2), default=0)

@@ -68,7 +68,7 @@ class PositionService:
             "type": position.option_type,  # Map 'option_type' to 'type'
             "qty": position.qty,
             "entry_price": float(position.avg_entry_price),
-            "current_price": float(position.current_price or position.avg_entry_price),
+            "current_price": float(position.avg_exit_price or position.avg_entry_price),
             "pnl": pnl,
             "pnl_percent": pnl_percent,
             "status": status,

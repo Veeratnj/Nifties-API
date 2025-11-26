@@ -87,9 +87,9 @@ class OrderService:
             
             # Get exit price from position's current_price
             if position:
-                print(f"[DEBUG] Order {order.id} - Position found! current_price={position.current_price}")
-                if position.current_price:
-                    avg_exec_price = float(position.current_price)  # Exit price from Position
+                print(f"[DEBUG] Order {order.id} - Position found! current_price={position.avg_exit_price}")
+                if position.avg_exit_price:
+                    avg_exec_price = float(position.avg_exit_price)  # Exit price from Position
                     print(f"[DEBUG] Order {order.id} - Set avg_exec_price to {avg_exec_price}")
             else:
                 print(f"[DEBUG] Order {order.id} - NO Position found!")
