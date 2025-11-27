@@ -167,10 +167,12 @@ class TickLTPService:
             
             # Create historical data entry
             print(f"DEBUG: Creating HistoricalData object :: {ohlc_data}")
+            from datetime import timezone, timedelta
+            IST = timezone(timedelta(hours=5, minutes=30))
             db_ohlc = HistoricalData(
                 symbol=ohlc_data.symbol,
                 timeframe=timeframe_enum,
-                timestamp=ohlc_data.timestamp,
+                timestamp=ohlc_data.timestamp.astimezone(IST),
                 open=ohlc_data.open,
                 high=ohlc_data.high,
                 low=ohlc_data.low,
