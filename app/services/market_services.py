@@ -6,7 +6,7 @@ import logging
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from app.models.models import MarketIndex, PnLSnapshot
+from app.models.models import MarketIndex, PnLSnapshot, SymbolMaster
 from app.schemas.schema import MarketIndexSchema, MarketIndexCreate, MarketIndexUpdate, PnLSchema, PnLCreate
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,10 @@ class MarketService:
     def get_all_indices(db: Session) -> List[MarketIndex]:
         """Get all market indices"""
         try:
-            indices = db.query(MarketIndex).all()
+            indices = db.query(SymbolMaster).filter(
+                SymbolMaster.is_active == True and 
+                SymbolMaster.is_deleted == False and
+                SymbolMaster.instrument_type == 'INDEX').all()
             logger.info(f"Retrieved {len(indices)} market indices")
             return indices
         except Exception as e:
