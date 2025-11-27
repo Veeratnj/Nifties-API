@@ -166,6 +166,7 @@ class TickLTPService:
             print(f"DEBUG: Converted to enum: {timeframe_enum}")
             
             # Create historical data entry
+            print(f"DEBUG: Creating HistoricalData object :: {ohlc_data}")
             db_ohlc = HistoricalData(
                 symbol=ohlc_data.symbol,
                 timeframe=timeframe_enum,
