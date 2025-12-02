@@ -5,7 +5,7 @@ Service layer for Tick Data operations
 from sqlalchemy.orm import Session
 from typing import Dict, Any
 from datetime import datetime
-
+from zoneinfo import ZoneInfo
 from app.models.models import SpotTickData, StrikePriceTickData, HistoricalData, TimeFrame, SymbolMaster
 from app.schemas.schema import TickDataInsert, StrikePriceLTPInsert, OHLCDataInsert
 
