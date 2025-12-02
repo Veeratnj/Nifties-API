@@ -1,7 +1,6 @@
 """
 Service layer for Tick Data operations
 """
-
 from sqlalchemy.orm import Session
 from typing import Dict, Any
 from datetime import datetime
@@ -14,7 +13,7 @@ class TickLTPService:
     """Service class for tick LTP operations (for API endpoints)"""
     
     @staticmethod
-    def insert_spot_ltp_old(db: Session, tick_data: TickDataInsert) -> SpotTickData:
+    def insert_spot_ltp_v1(db: Session, tick_data: TickDataInsert) -> SpotTickData:
         """
         Insert spot symbol LTP data using token
         
@@ -70,7 +69,7 @@ class TickLTPService:
             raise Exception(f"Error inserting spot LTP data: {str(e)}")
 
     @staticmethod
-    def insert_spot_ltp(db: Session, tick_data: TickDataInsert) -> SpotTickData:
+    def insert_spot_ltp_old(db: Session, tick_data: TickDataInsert) -> SpotTickData:
         try:
             symbol = db.query(SymbolMaster).filter(
                 SymbolMaster.token == tick_data.token,
@@ -96,6 +95,56 @@ class TickLTPService:
             db.add(db_tick)
             db.commit()
             db.refresh(db_tick)
+            return db_tick
+
+        except Exception as e:
+            db.rollback()
+            raise Exception(f"Error inserting spot LTP data: {str(e)}")
+
+
+
+
+    @staticmethod
+    def insert_spot_ltp(db: Session, tick_data: TickDataInsert) -> SpotTickData:
+        """
+        Insert spot symbol LTP data using token (timestamp comes as ISO string).
+        """
+
+        try:
+            # ✔ Convert timestamp string → datetime with timezone
+            ist_ts = datetime.fromisoformat(tick_data.timestamp)
+
+            # Ensure timezone is IST (Asia/Kolkata)
+            if ist_ts.tzinfo is None:
+                ist_ts = ist_ts.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
+            else:
+                ist_ts = ist_ts.astimezone(ZoneInfo("Asia/Kolkata"))
+
+            # ✔ Create trade_date (midnight IST)
+            trade_date = ist_ts.date()
+
+            # Lookup symbol
+            symbol = db.query(SymbolMaster).filter(
+                SymbolMaster.token == tick_data.token,
+                SymbolMaster.is_active == True,
+                SymbolMaster.is_deleted == False
+            ).first()
+
+            if not symbol:
+                raise Exception(f"Symbol with token '{tick_data.token}' not found or inactive")
+
+            # Create tick
+            db_tick = SpotTickData(
+                symbol_id=symbol.id,
+                timestamp=ist_ts,
+                ltp=tick_data.ltp,
+                trade_date=trade_date
+            )
+
+            db.add(db_tick)
+            db.commit()
+            db.refresh(db_tick)
+
             return db_tick
 
         except Exception as e:
