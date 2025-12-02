@@ -495,14 +495,14 @@ class OHLCDataInsert(BaseModel):
 
 class TickDataInsert(BaseModel):
     token: str
-    timestamp: datetime
+    timestamp: str
     ltp:Decimal
 
 class StrikePriceLTPInsert(BaseModel):
     strike_price_token: str
     strike_price:int
     ltp:Decimal
-    timestamp: datetime
+    timestamp: str
 
 
 
