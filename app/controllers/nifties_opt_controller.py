@@ -61,9 +61,14 @@ def fetch_ohlc(token: str = Body(...), limit: int = Body(500), db: Session = Dep
 def fetch_ltp(stock_token: str, db: Session = Depends(get_db)):
     try:
         print('stock_token:::', stock_token)
+        symbol = db.query(SymbolMaster).filter(
+            SymbolMaster.token == stock_token,
+            SymbolMaster.is_active == True,
+            SymbolMaster.is_deleted == False
+        ).first()
         idx = (
             db.query(SpotTickData)
-            .filter(SpotTickData.symbol_id == stock_token)
+            .filter(SpotTickData.symbol_id == symbol.id)
             .order_by(SpotTickData.id.desc())
             .first()
         )

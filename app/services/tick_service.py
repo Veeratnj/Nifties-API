@@ -35,7 +35,7 @@ class TickLTPService:
                 SymbolMaster.is_active == True,
                 SymbolMaster.is_deleted == False
             ).first()
-            
+            print('symbol:::', symbol)
             if not symbol:
                 raise Exception(f"Symbol with token '{tick_data.token}' not found or inactive")
             
@@ -45,15 +45,15 @@ class TickLTPService:
             # Create tick data entry
             db_tick = SpotTickData(
                 symbol_id=symbol.id,
-                trade_date=trade_date,
                 timestamp=tick_data.timestamp,
                 ltp=tick_data.ltp,
-                volume=tick_data.volume,
-                oi=tick_data.oi,
-                bid_price=tick_data.bid_price,
-                bid_qty=tick_data.bid_qty,
-                ask_price=tick_data.ask_price,
-                ask_qty=tick_data.ask_qty
+                trade_date=tick_data.timestamp,
+                # volume=tick_data.volume,
+                # oi=tick_data.oi,
+                # bid_price=tick_data.bid_price,
+                # bid_qty=tick_data.bid_qty,
+                # ask_price=tick_data.ask_price,
+                # ask_qty=tick_data.ask_qty
             )
             
             db.add(db_tick)
