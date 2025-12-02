@@ -40,14 +40,16 @@ class TickLTPService:
                 raise Exception(f"Symbol with token '{tick_data.token}' not found or inactive")
             
             # Extract trade_date from timestamp (date part only)
-            trade_date = tick_data.timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
+            ist_ts = tick_data.timestamp.astimezone(ZoneInfo("Asia/Kolkata"))
+            trade_date = ist_ts.replace(hour=0, minute=0, second=0, microsecond=0)
+            # trade_date = tick_data.timestamp.replace(hour=0, minute=0, second=0, microsecond=0).to_ist()
             
             # Create tick data entry
             db_tick = SpotTickData(
                 symbol_id=symbol.id,
-                timestamp=tick_data.timestamp,
+                timestamp=ist_ts,
                 ltp=tick_data.ltp,
-                trade_date=tick_data.timestamp,
+                trade_date=trade_date,
                 # volume=tick_data.volume,
                 # oi=tick_data.oi,
                 # bid_price=tick_data.bid_price,

@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.db.db import get_db
 from app.services.market_services import MarketService
 from app.schemas.schema import MarketIndexSchema, PnLSchema
-from app.models.models import HistoricalData, SpotTickData
+from app.models.models import HistoricalData, SpotTickData, SymbolMaster
+import pandas as pd
 
 router = APIRouter(prefix="/db", tags=["nifties-opt"])
 
@@ -21,27 +22,85 @@ def get_nifty_tokens(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 # 2. Fetch OHLC Data
-@router.post("/ohlc")
-def fetch_ohlc(token: str = Body(...), limit: int = Body(500), db: Session = Depends(get_db)):
-    # Example: Return last N records for the given token from MarketIndex (simulate OHLC)
+@router.get("/current/ohlc")
+def fetch_current_ohlc(token: str, db: Session = Depends(get_db)):
     try:
-        print('token:::',token)
-        # This is a placeholder. Replace with your actual OHLC logic if you have OHLC table.
-        indices = db.query(HistoricalData).filter(HistoricalData.symbol == token).order_by(HistoricalData.id.asc()).limit(limit).all()
-        print('indices:::',indices)
+        print("token:::", token)
 
-        data = [
-            {
-                "start_time": str(idx.timestamp),
-                "open": float(idx.open),
-                "high": float(idx.high),
-                "low": float(idx.low),
-                "close": float(idx.close)
-            } for idx in indices
-        ]
+        # fetch the most recent candle
+        idx = (
+            db.query(HistoricalData)
+            .filter(HistoricalData.symbol == token)
+            .order_by(HistoricalData.timestamp.desc())
+            .first()
+        )
+
+        print("indices:::", idx)
+
+        if not idx:
+            return {"status": "error", "message": "No data found"}
+
+        data = {
+            "start_time": str(idx.timestamp),
+            "open": float(idx.open),
+            "high": float(idx.high),
+            "low": float(idx.low),
+            "close": float(idx.close)
+        }
+
         return {"status": "success", "data": data}
+
     except Exception as e:
-        print('e:::',e)
+        print("e:::", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@router.get("/historical/ohlc/load")
+def load_historical_ohlc(
+    token: str,
+    db: Session = Depends(get_db)
+):
+    try:
+        # each day = 125 candles (3-minute)
+        candles_per_day = 125
+        last_n_days = 3
+        total_candles = candles_per_day * last_n_days  # 375 candles
+        print('total_candles:::',total_candles)
+        # fetch last 375 candles
+        candles = (
+            db.query(HistoricalData)
+            .filter(
+                HistoricalData.symbol == token,
+                # HistoricalData.timeframe == TimeFrame.MIN_3
+            )
+            .order_by(HistoricalData.timestamp.desc())
+            .limit(total_candles)
+            .all()
+        )
+        print('candles:::',candles)
+
+        # reverse to ascending order
+        candles = list(reversed(candles))
+
+        # convert to DataFrame
+        df = pd.DataFrame([{
+            "timestamp": c.timestamp,
+            "open": float(c.open),
+            "high": float(c.high),
+            "low": float(c.low),
+            "close": float(c.close),
+            "volume": c.volume,
+        } for c in candles])
+
+        # return DataFrame as JSON
+        return {
+            "symbol": token,
+            "rows": len(df),
+            "data": df.to_dict(orient="records")  # clean JSON format
+        }
+
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 # 3. Fetch Latest LTP
@@ -66,6 +125,7 @@ def fetch_ltp(stock_token: str, db: Session = Depends(get_db)):
             SymbolMaster.is_active == True,
             SymbolMaster.is_deleted == False
         ).first()
+        print('flag2',symbol)
         idx = (
             db.query(SpotTickData)
             .filter(SpotTickData.symbol_id == symbol.id)
