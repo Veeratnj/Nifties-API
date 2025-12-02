@@ -14,7 +14,7 @@ class TickLTPService:
     """Service class for tick LTP operations (for API endpoints)"""
     
     @staticmethod
-    def insert_spot_ltp(db: Session, tick_data: TickDataInsert) -> SpotTickData:
+    def insert_spot_ltp_old(db: Session, tick_data: TickDataInsert) -> SpotTickData:
         """
         Insert spot symbol LTP data using token
         
@@ -69,7 +69,41 @@ class TickLTPService:
             db.rollback()
             raise Exception(f"Error inserting spot LTP data: {str(e)}")
 
-    
+    @staticmethod
+    def insert_spot_ltp(db: Session, tick_data: TickDataInsert) -> SpotTickData:
+        try:
+            symbol = db.query(SymbolMaster).filter(
+                SymbolMaster.token == tick_data.token,
+                SymbolMaster.is_active == True,
+                SymbolMaster.is_deleted == False
+            ).first()
+
+            if not symbol:
+                raise Exception(f"Symbol with token '{tick_data.token}' not found or inactive")
+
+            # FIX: Incoming timestamp is already IST → attach tzinfo only
+            ist_ts = tick_data.timestamp.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
+
+            trade_date = ist_ts.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            db_tick = SpotTickData(
+                symbol_id=symbol.id,
+                timestamp=ist_ts,
+                ltp=tick_data.ltp,
+                trade_date=trade_date
+            )
+
+            db.add(db_tick)
+            db.commit()
+            db.refresh(db_tick)
+            return db_tick
+
+        except Exception as e:
+            db.rollback()
+            raise Exception(f"Error inserting spot LTP data: {str(e)}")
+
+
+  
     @staticmethod
     def insert_strike_ltp(db: Session, strike_ltp_data: StrikePriceLTPInsert) -> StrikePriceTickData:
         """
