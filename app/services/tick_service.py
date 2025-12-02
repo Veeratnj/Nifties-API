@@ -40,7 +40,8 @@ class TickLTPService:
                 raise Exception(f"Symbol with token '{tick_data.token}' not found or inactive")
             
             # Extract trade_date from timestamp (date part only)
-            ist_ts = tick_data.timestamp.astimezone(ZoneInfo("Asia/Kolkata"))
+            # ist_ts = tick_data.timestamp.astimezone(ZoneInfo("Asia/Kolkata"))
+            ist_ts = tick_data.timestamp.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
             trade_date = ist_ts.replace(hour=0, minute=0, second=0, microsecond=0)
             # trade_date = tick_data.timestamp.replace(hour=0, minute=0, second=0, microsecond=0).to_ist()
             
