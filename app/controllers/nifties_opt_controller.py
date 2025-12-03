@@ -7,6 +7,9 @@ from app.schemas.schema import MarketIndexSchema, PnLSchema
 from app.models.models import HistoricalData, SpotTickData, SymbolMaster
 import pandas as pd
 
+from datetime import timezone, timedelta
+IST = timezone(timedelta(hours=5, minutes=30))
+
 router = APIRouter(prefix="/db", tags=["nifties-opt"])
 
 # 1. Get Nifty Tokens
@@ -41,7 +44,7 @@ def fetch_current_ohlc(token: str, db: Session = Depends(get_db)):
             return {"status": "error", "message": "No data found"}
 
         data = {
-            "start_time": str(idx.timestamp),
+            "start_time": str(idx.timestamp.astimezone(IST).isoformat()),
             "open": float(idx.open),
             "high": float(idx.high),
             "low": float(idx.low),
@@ -56,8 +59,8 @@ def fetch_current_ohlc(token: str, db: Session = Depends(get_db)):
 
 
 
-@router.get("/historical/ohlc/load")
-def load_historical_ohlc(
+@router.get("/historical/ohlc/load/v1")
+def load_historical_ohlc_v1(
     token: str,
     db: Session = Depends(get_db)
 ):
@@ -102,6 +105,48 @@ def load_historical_ohlc(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@router.get("/historical/ohlc/load")
+def load_historical_ohlc(
+    token: str,
+    db: Session = Depends(get_db)
+):
+    try:
+        candles_per_day = 125
+        last_n_days = 3
+        total_candles = candles_per_day * last_n_days
+
+        candles = (
+            db.query(HistoricalData)
+            .filter(HistoricalData.symbol == token)
+            .order_by(HistoricalData.timestamp.desc())
+            .limit(total_candles)
+            .all()
+        )
+
+        candles = list(reversed(candles))
+
+        df = pd.DataFrame([{
+            "timestamp": c.timestamp.astimezone(IST).isoformat(),  # FIXED: IST
+            "open": float(c.open),
+            "high": float(c.high),
+            "low": float(c.low),
+            "close": float(c.close),
+            "volume": c.volume,
+        } for c in candles])
+
+        return {
+            "symbol": token,
+            "rows": len(df),
+            "data": df.to_dict(orient="records")
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # 3. Fetch Latest LTP
 # @router.post("/indices/ltp")
