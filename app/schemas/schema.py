@@ -505,4 +505,15 @@ class StrikePriceLTPInsert(BaseModel):
     timestamp: str
 
 
+class KillTradeSignalRequest(BaseModel):
+    """Request schema for kill trade signal endpoint"""
+    token: str = Field(..., description="Token identifier to check for kill signal")
+
+
+class KillTradeSignalResponse(BaseModel):
+    """Response schema for kill trade signal endpoint"""
+    kill: bool = Field(..., description="Whether the trade should be killed")
+    token: Optional[str] = Field(None, description="Token that was checked")
+    message: Optional[str] = Field(None, description="Optional message or reason")
+
 

@@ -203,7 +203,73 @@ def fetch_trend(stock_token: str = Body(...), db: Session = Depends(get_db)):
 
 # 5. Admin Kill Trade Signal
 @router.post("/admin/kill-trade-signal")
-def admin_kill_trade_signal(token: str = Body(...)):
-    # This is a placeholder. Implement your own logic for admin-triggered exit.
-    # For now, always return kill: false
-    return {"kill": False}
+def admin_kill_trade_signal(
+    request: dict = Body(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin endpoint to check if a trade should be killed for a given token.
+    
+    **Request Body Example:**
+    ```json
+    {
+        "token": "99926009"
+    }
+    ```
+    
+    **Response:**
+    ```json
+    {
+        "kill": false,
+        "token": "99926009",
+        "message": "No kill signal active"
+    }
+    ```
+    
+    Returns:
+    - kill (boolean): true if the trade should be force-exited, false otherwise
+    - token (string): The token that was checked
+    - message (string): Optional message or reason
+    """
+    try:
+        # Extract token from request body
+        token = request.get("token")
+        
+        if not token:
+            raise HTTPException(
+                status_code=422,
+                detail="Token is required in request body"
+            )
+        
+        print(f"Checking kill trade signal for token: {token}")
+        
+        # TODO: Implement your actual kill signal logic here
+        # For example, check if there's an active kill switch for this token
+        from app.models.models import KillSwitch
+        
+        # Check if there's an active kill switch
+        # kill_switch = db.query(KillSwitch).filter(
+        #     KillSwitch.is_active == True,
+        #     # You can add more conditions here based on your requirements
+        #     # For example, filter by close_type, close_for, etc.
+        # ).first()
+        
+        # if kill_switch:
+        #     return {
+        #         "kill": True,
+        #         "token": token,
+        #         "message": f"Kill switch active: {kill_switch.reason or 'Manual kill switch triggered'}"
+        #     }
+        
+        # No kill signal active
+        return {
+            "kill": False,
+            "token": token,
+            "message": "No kill signal active"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in kill-trade-signal for token {token if 'token' in locals() else 'unknown'}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

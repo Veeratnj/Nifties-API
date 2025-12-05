@@ -16,6 +16,12 @@ from app.schemas.schema import (
     ErrorResponseSchema,
 )
 
+from app.schemas.signal_schema import (
+    SignalEntryRequest,
+    SignalExitRequest,
+    SignalResponse,
+)
+
 __all__ = [
     "UserSchema",
     "TradeSchema",
@@ -28,4 +34,7 @@ __all__ = [
     "PnLSchema",
     "ResponseSchema",
     "ErrorResponseSchema",
+    "SignalEntryRequest",
+    "SignalExitRequest",
+    "SignalResponse",
 ]

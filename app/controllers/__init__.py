@@ -12,6 +12,7 @@ from app.controllers import (
     health_controller,
     log_controller,
     alert_controller,
+    signal_controller,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "health_controller",
     "log_controller",
     "alert_controller",
+    "signal_controller",
 ]

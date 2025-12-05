@@ -10,6 +10,7 @@ from app.services.user_services import UserService
 from app.services.analytics_services import AnalyticsService
 from app.services.log_services import LogService
 from app.services.alert_services import AlertService
+from app.services.signal_service import SignalService
 
 __all__ = [
     "MarketService",
@@ -20,4 +21,5 @@ __all__ = [
     "AnalyticsService",
     "LogService",
     "AlertService",
+    "SignalService",
 ]

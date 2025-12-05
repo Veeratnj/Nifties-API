@@ -1481,6 +1481,33 @@ class StrikePriceTickData(Base):
         return f"<StrikePriceTickData(id={self.id}, spot_symbol_id={self.spot_symbol_id}, strike_price={self.strike_price}, ltp={self.ltp})>"
 
 
-
-
+class SignalLog(Base):
+    """Trading signal logs for entry and exit signals"""
+    __tablename__ = 'signal_logs'
+    
+    # Primary Key
+    id = Column(BigInteger, primary_key=True, index=True)
+    
+    # Signal Details
+    token = Column(String(50), nullable=False, index=True)
+    signal_type = Column(String(50), nullable=False, index=True)  # BUY_ENTRY, SELL_ENTRY, BUY_EXIT, SELL_EXIT
+    unique_id = Column(String(100), nullable=False, index=True)
+    strike_price_token = Column(String(50), nullable=False, index=True)
+    strategy_code = Column(String(100), nullable=False, index=True)
+    signal_category = Column(String(20), nullable=False, index=True)  # ENTRY or EXIT
+    
+    # Timestamp
+    timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_signal_log_unique_id', 'unique_id'),
+        Index('idx_signal_log_token_time', 'token', 'timestamp'),
+        Index('idx_signal_log_strategy', 'strategy_code', 'timestamp'),
+        Index('idx_signal_log_category', 'signal_category', 'timestamp'),
+    )
+    
+    def __repr__(self):
+        return f"<SignalLog(id={self.id}, signal_type={self.signal_type}, unique_id={self.unique_id})>"
 
