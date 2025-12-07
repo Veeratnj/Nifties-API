@@ -4,6 +4,7 @@ Trading Platform API for Options Trading
 """
 
 import logging
+from logging.handlers import RotatingFileHandler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -29,12 +30,21 @@ from app.controllers import (
     signal_controller,
 )
 
-# Configure logging
+# Configure logging with rotating file handler (1MB max size)
+rotating_handler = RotatingFileHandler(
+    "logs/app.log",
+    maxBytes=1024 * 1024,  # 1MB
+    backupCount=3  # Keep 3 backup files
+)
+rotating_handler.setFormatter(
+    logging.Formatter("[%(asctime)s] - %(name)s - %(levelname)s - %(message)s")
+)
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.ERROR,
     format="[%(asctime)s] - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("logs/app.log"),
+        rotating_handler,
         logging.StreamHandler()
     ]
 )
