@@ -171,7 +171,7 @@ class Broker(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
-    user_accounts = relationship("UserBrokerAccount", back_populates="broker")
+    # user_accounts = relationship("UserBrokerAccount", back_populates="broker")
     
     def __repr__(self):
         return f"<Broker(id={self.id}, name={self.name})>"
@@ -200,7 +200,9 @@ class User(Base):
     last_login = Column(DateTime(timezone=True))
 
     # Relationships
-    broker_accounts = relationship("UserBrokerAccount", back_populates="user", cascade="all, delete-orphan")
+    # broker_accounts = relationship("UserBrokerAccount", back_populates="user", cascade="all, delete-orphan")
+    angel_credentials = relationship("AngelOneCredentials", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    dhan_credentials = relationship("DhanCredentials", back_populates="user", uselist=False, cascade="all, delete-orphan")
     trading_settings = relationship("UserTradingSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
     risk_settings = relationship("UserRiskSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
     ui_settings = relationship("UserUISettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
@@ -218,50 +220,110 @@ class User(Base):
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"
 
 
-class UserBrokerAccount(Base):
-    """User's Broker Account Configuration"""
-    __tablename__ = "user_broker_accounts"
+# class UserBrokerAccount(Base):
+#     """User's Broker Account Configuration"""
+#     __tablename__ = "user_broker_accounts"
+# 
+#     id = Column(Integer, primary_key=True, index=True)
+#     user_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=False, index=True)
+#     broker_id = Column(Integer, ForeignKey("brokers.id"), nullable=False, index=True)
+# 
+#     # Broker Credentials
+#     broker_client_id = Column(String(100), nullable=False)
+#     api_key = Column(String(500))  # Encrypted
+#     api_secret = Column(String(500))  # Encrypted
+#     access_token = Column(String(500))  # Encrypted
+#     refresh_token = Column(String(500))  # Encrypted
+#     
+#     # Session Management
+#     session_token = Column(String(500))
+#     token_expires_at = Column(DateTime(timezone=True))
+#     last_synced_at = Column(DateTime(timezone=True))
+#     
+#     # Account Status
+#     is_active = Column(Boolean, default=False, index=True)
+#     is_connected = Column(Boolean, default=False)
+#     
+#     # Account Balance
+#     account_balance = Column(Numeric(12, 2), default=0)
+#     margin_available = Column(Numeric(12, 2), default=0)
+#     margin_used = Column(Numeric(12, 2), default=0)
+#     
+#     # Timestamps
+#     created_at = Column(DateTime(timezone=True), server_default=func.now())
+#     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+# 
+#     # Relationships
+#     user = relationship("User", back_populates="broker_accounts")
+#     broker = relationship("Broker", back_populates="user_accounts")
+# 
+#     __table_args__ = (
+#         UniqueConstraint("user_id", "broker_id", name="uq_user_broker"),
+#         Index('idx_user_broker_active', 'user_id', 'is_active'),
+#     )
+#     
+#     def __repr__(self):
+#         return f"<UserBrokerAccount(id={self.id}, user_id={self.user_id}, broker_id={self.broker_id})>"
 
-    id = Column(Integer, primary_key=True, index=True)
+
+class AngelOneCredentials(Base):
+    __tablename__ = "angelone_credentials"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Common
     user_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=False, index=True)
-    broker_id = Column(Integer, ForeignKey("brokers.id"), nullable=False, index=True)
+    is_active = Column(Boolean, default=True, nullable=False)
 
-    # Broker Credentials
-    broker_client_id = Column(String(100), nullable=False)
-    api_key = Column(String(500))  # Encrypted
-    api_secret = Column(String(500))  # Encrypted
-    access_token = Column(String(500))  # Encrypted
-    refresh_token = Column(String(500))  # Encrypted
-    
-    # Session Management
-    session_token = Column(String(500))
-    token_expires_at = Column(DateTime(timezone=True))
-    last_synced_at = Column(DateTime(timezone=True))
-    
-    # Account Status
-    is_active = Column(Boolean, default=False, index=True)
-    is_connected = Column(Boolean, default=False)
-    
-    # Account Balance
-    account_balance = Column(Numeric(12, 2), default=0)
-    margin_available = Column(Numeric(12, 2), default=0)
-    margin_used = Column(Numeric(12, 2), default=0)
-    
-    # Timestamps
+    # Angel One specific
+    name = Column(String(100), nullable=True)
+    email = Column(String(150), nullable=False)
+    api_key = Column(Text, nullable=False)
+    username = Column(String(50), nullable=False)
+    password = Column(String(50), nullable=False)
+    token = Column(Text, nullable=False)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
+    )
 
     # Relationships
-    user = relationship("User", back_populates="broker_accounts")
-    broker = relationship("Broker", back_populates="user_accounts")
+    user = relationship("User", back_populates="angel_credentials")
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "broker_id", name="uq_user_broker"),
-        Index('idx_user_broker_active', 'user_id', 'is_active'),
-    )
-    
     def __repr__(self):
-        return f"<UserBrokerAccount(id={self.id}, user_id={self.user_id}, broker_id={self.broker_id})>"
+        return f"<AngelOneCredentials user_id={self.user_id} active={self.is_active}>"
+
+
+class DhanCredentials(Base):
+    __tablename__ = "dhan_credentials"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Common
+    user_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=False, index=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Dhan specific
+    name = Column(String(100), nullable=True)
+    email = Column(String(150), nullable=False)
+    client_id = Column(Text, nullable=False)
+    access_token = Column(Text, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
+    # Relationships
+    user = relationship("User", back_populates="dhan_credentials")
+
+    def __repr__(self):
+        return f"<DhanCredentials user_id={self.user_id} active={self.is_active}>"
 
 
 class UserTradingSettings(Base):
