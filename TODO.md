@@ -13,7 +13,7 @@
 ---
 6. add strike price tokens symbols master
 ---
-7.  modify my trades table as per my new signal flow
+7. -- modify my trades table as per my new signal flow
 ---
 8.  add user broker account in tables
 ---

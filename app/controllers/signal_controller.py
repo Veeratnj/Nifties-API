@@ -315,3 +315,42 @@ async def get_active_positions(
             detail=f"Failed to retrieve active positions: {str(e)}"
         )
 
+
+
+@router.post("/entry/v3", response_model=SignalResponse, status_code=status.HTTP_201_CREATED)
+async def send_entry_signal_v3(
+    signal_data: SignalEntryRequest,
+    db: Session = Depends(get_db)
+):
+    try:
+        SignalService.process_entry_signal_v3(db=db, signal_data=signal_data)
+        return SignalResponse(
+            success=True,
+            message="Entry signal v3 processed successfully",
+            data={}
+        )
+    except Exception as e:
+        print('Exception',e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process entry signal: {str(e)}"
+        )
+
+
+@router.post("/exit/v3", response_model=SignalResponse, status_code=status.HTTP_201_CREATED)
+async def send_exit_signal_v3(
+    signal_data: SignalExitRequest,
+    db: Session = Depends(get_db)
+):
+    try:
+        SignalService.process_exit_signal_v3(db=db, signal_data=signal_data)
+        return SignalResponse(
+            success=True,
+            message="Exit signal v3 processed successfully",
+            data={}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process exit signal: {str(e)}"
+        )

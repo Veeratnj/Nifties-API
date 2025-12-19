@@ -207,9 +207,9 @@ class User(Base):
     risk_settings = relationship("UserRiskSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
     ui_settings = relationship("UserUISettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
     
-    positions = relationship("Position", back_populates="user", cascade="all, delete-orphan")
+    # positions = relationship("Position", back_populates="user", cascade="all, delete-orphan")
     orders = relationship("Order", back_populates="user", cascade="all, delete-orphan")
-    strategies = relationship("Strategy", back_populates="user", cascade="all, delete-orphan")
+    # strategies = relationship("Strategy", back_populates="user", cascade="all, delete-orphan")
     risk_metrics = relationship("RiskMetrics", back_populates="user", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     watchlists = relationship("Watchlist", back_populates="user", cascade="all, delete-orphan")
@@ -544,56 +544,56 @@ class Position(Base):
     __tablename__ = 'positions'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
-    strategy_id = Column(Integer, ForeignKey('strategies.id', ondelete='SET NULL'))
+    # user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    # strategy_id = Column(Integer, ForeignKey('strategies.id', ondelete='SET NULL'))
     
-    # Position Details
-    symbol = Column(String(100), nullable=False, index=True)
-    underlying = Column(String(50), nullable=False, index=True)
-    strike_price = Column(Integer, nullable=False)
-    option_type = Column(String(2), nullable=False)  # CE/PE
-    expiry_date = Column(DateTime(timezone=True), nullable=False)
+    # # Position Details
+    # symbol = Column(String(100), nullable=False, index=True)
+    # underlying = Column(String(50), nullable=False, index=True)
+    # strike_price = Column(Integer, nullable=False)
+    # option_type = Column(String(2), nullable=False)  # CE/PE
+    # expiry_date = Column(DateTime(timezone=True), nullable=False)
     
-    # Quantity and Pricing
-    qty = Column(Integer, nullable=False)
-    avg_entry_price = Column(Numeric(10, 2), nullable=False)
-    avg_exit_price = Column(Numeric(10, 2),default=0 )
+    # # Quantity and Pricing
+    # qty = Column(Integer, nullable=False)
+    # avg_entry_price = Column(Numeric(10, 2), nullable=False)
+    # avg_exit_price = Column(Numeric(10, 2),default=0 )
     
-    # P&L
-    realized_pnl = Column(Numeric(12, 2), default=0)
-    unrealized_pnl = Column(Numeric(12, 2), default=0)
-    total_pnl = Column(Numeric(12, 2), default=0)
-    pnl_percent = Column(Numeric(6, 2), default=0)
+    # # P&L
+    # realized_pnl = Column(Numeric(12, 2), default=0)
+    # unrealized_pnl = Column(Numeric(12, 2), default=0)
+    # total_pnl = Column(Numeric(12, 2), default=0)
+    # pnl_percent = Column(Numeric(6, 2), default=0)
     
-    # Risk Management
-    stop_loss = Column(Numeric(10, 2))
-    target = Column(Numeric(10, 2))
-    trailing_sl = Column(Boolean, default=False)
-    trailing_sl_percent = Column(Numeric(5, 2))
+    # # Risk Management
+    # stop_loss = Column(Numeric(10, 2))
+    # target = Column(Numeric(10, 2))
+    # trailing_sl = Column(Boolean, default=False)
+    # trailing_sl_percent = Column(Numeric(5, 2))
     
-    # Margin
-    margin_used = Column(Numeric(12, 2))
+    # # Margin
+    # margin_used = Column(Numeric(12, 2))
     
-    # Status
-    status = Column(SQLEnum(PositionStatus), nullable=False, default=PositionStatus.OPEN, index=True)
+    # # Status
+    # status = Column(SQLEnum(PositionStatus), nullable=False, default=PositionStatus.OPEN, index=True)
     
-    # Timestamps
-    entry_time = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    exit_time = Column(DateTime(timezone=True))
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # # Timestamps
+    # entry_time = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # exit_time = Column(DateTime(timezone=True))
+    # updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # Relationships
-    user = relationship("User", back_populates="positions")
-    strategy = relationship("Strategy", back_populates="positions")
+    # # Relationships
+    # user = relationship("User", back_populates="positions")
+    # strategy = relationship("Strategy", back_populates="positions")
     
-    __table_args__ = (
-        Index('idx_position_user_status', 'user_id', 'status'),
-        Index('idx_position_symbol_status', 'symbol', 'status'),
-        Index('idx_position_underlying', 'underlying', 'status'),
-    )
+    # __table_args__ = (
+    #     Index('idx_position_user_status', 'user_id', 'status'),
+    #     Index('idx_position_symbol_status', 'symbol', 'status'),
+    #     Index('idx_position_underlying', 'underlying', 'status'),
+    # )
     
     def __repr__(self):
-        return f"<Position(id={self.id}, symbol={self.symbol}, qty={self.qty}, status={self.status})>"
+        return f"<Position(id={self.id})>"
 
 
 class Order(Base):
@@ -601,61 +601,39 @@ class Order(Base):
     __tablename__ = 'orders'
     
     id = Column(Integer, primary_key=True, index=True)
+    signal_log_id = Column(BigInteger, ForeignKey('signal_logs.id', ondelete='SET NULL'), index=True)
+    strategy_id = Column(Integer, ForeignKey('strategies.id', ondelete='SET NULL'), index=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
-    strategy_id = Column(Integer, ForeignKey('strategies.id', ondelete='SET NULL'))
-    position_id = Column(Integer, ForeignKey('positions.id', ondelete='SET NULL'))
     
     # Order Details
-    order_id = Column(String(100), unique=True, index=True)  # Internal order ID
     symbol = Column(String(100), nullable=False, index=True)
-    underlying = Column(String(50), nullable=False, index=True)
+    option_type = Column(String(2))  # PE or CE
     
-    # Order Type
-    order_type = Column(SQLEnum(OrderType), nullable=False)
-    product_type = Column(String(20), default="NRML")  # MIS, NRML, CNC
-    order_variety = Column(String(20), default="REGULAR")  # REGULAR, AMO, BO, CO
-    
-    # Quantity and Pricing
+    # Price and Quantity
+    entry_price = Column(Numeric(10, 2))
+    exit_price = Column(Numeric(10, 2))
     qty = Column(Integer, nullable=False)
-    price = Column(Numeric(10, 2))
-    trigger_price = Column(Numeric(10, 2))
-    disclosed_qty = Column(Integer, default=0)
-    
-    # Execution Details
-    executed_qty = Column(Integer, default=0)
-    pending_qty = Column(Integer)
-    cancelled_qty = Column(Integer, default=0)
-    avg_executed_price = Column(Numeric(10, 2))
     
     # Status
-    status = Column(SQLEnum(OrderStatus), nullable=False, default=OrderStatus.PENDING, index=True)
-    status_message = Column(String(500))
-    
-    # Broker Response
-    broker_order_id = Column(String(100), index=True)
-    exchange_order_id = Column(String(100))
-    exchange = Column(String(20))  # NSE, BSE
-    rejection_reason = Column(String(500))
+    status = Column(String(50), default='PENDING', index=True)
+    is_deleted = Column(Boolean, default=False, index=True)
     
     # Timestamps
-    placed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    executed_at = Column(DateTime(timezone=True))
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    entry_time = Column(DateTime(timezone=True))
+    exit_time = Column(DateTime(timezone=True))
     
     # Relationships
     user = relationship("User", back_populates="orders")
+    signal_log = relationship("SignalLog", back_populates="orders")
     strategy = relationship("Strategy", back_populates="orders")
-    position = relationship("Position", foreign_keys=[position_id])
     broker_order = relationship("BrokerOrder", back_populates="order", uselist=False)
-    
     __table_args__ = (
         Index('idx_order_user_status', 'user_id', 'status'),
-        Index('idx_order_placed_at', 'placed_at'),
-        Index('idx_order_broker', 'broker_order_id'),
+        
     )
     
     def __repr__(self):
-        return f"<Order(id={self.id}, symbol={self.symbol}, type={self.order_type}, status={self.status})>"
+        return f"<Order(id={self.id}, symbol={self.symbol}, status={self.status})>"
 
 
 class Trade(Base):
@@ -663,9 +641,10 @@ class Trade(Base):
     __tablename__ = 'trades'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    # user_id removed - Trade is now a master signal record
     strategy_id = Column(Integer, ForeignKey('strategies.id', ondelete='SET NULL'), index=True)
-    position_id = Column(Integer, ForeignKey('positions.id', ondelete='SET NULL'))
+    # position_id = Column(Integer, ForeignKey('positions.id', ondelete='SET NULL'))
+    signal_id = Column(BigInteger, ForeignKey('signal_logs.id', ondelete='SET NULL'), index=True)
     
     # Trade Details
     symbol = Column(String(100), nullable=False, index=True)
@@ -704,10 +683,9 @@ class Trade(Base):
     
     # Relationships
     strategy = relationship("Strategy", back_populates="trades")
-    position = relationship("Position", foreign_keys=[position_id])
+    # position = relationship("Position", foreign_keys=[position_id])
     
     __table_args__ = (
-        Index('idx_trade_user_time', 'user_id', 'entry_time'),
         Index('idx_trade_symbol', 'symbol', 'entry_time'),
         Index('idx_trade_underlying', 'underlying', 'entry_time'),
         Index('idx_trade_strategy', 'strategy_id', 'entry_time'),
@@ -724,58 +702,60 @@ class Strategy(Base):
     __tablename__ = 'strategies'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    # user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     
     # Strategy Details
     name = Column(String(100), nullable=False)
     description = Column(Text)
-    strategy_type = Column(String(50))  # MOMENTUM, MEAN_REVERSION, ARBITRAGE, STRADDLE, etc.
+    # strategy_type = Column(String(50))  # MOMENTUM, MEAN_REVERSION, ARBITRAGE, STRADDLE, etc.
     underlying = Column(String(50), nullable=False, index=True)  # NIFTY, BANKNIFTY
     
     # Configuration
-    config = Column(JSON)  # Strategy-specific parameters
+    # config = Column(JSON)  # Strategy-specific parameters
     timeframe = Column(String(10))  # 1m, 5m, 15m, 1h, 1d
     
     # Risk Management
-    max_positions = Column(Integer, default=1)
-    position_size = Column(Numeric(12, 2))
-    stop_loss_pct = Column(Numeric(5, 2))
-    target_pct = Column(Numeric(5, 2))
-    max_loss_per_day = Column(Numeric(12, 2))
+    # max_positions = Column(Integer, default=1)
+    # position_size = Column(Numeric(12, 2))
+    # stop_loss_pct = Column(Numeric(5, 2))
+    # target_pct = Column(Numeric(5, 2))
+    # max_loss_per_day = Column(Numeric(12, 2))
     
-    # Status
-    status = Column(SQLEnum(StrategyStatus), nullable=False, default=StrategyStatus.ACTIVE, index=True)
+    # # Status
+    # status = Column(SQLEnum(StrategyStatus), nullable=False, default=StrategyStatus.ACTIVE, index=True)
     is_live = Column(Boolean, default=False, index=True)
     
     # Performance
-    total_trades = Column(Integer, default=0)
-    winning_trades = Column(Integer, default=0)
-    losing_trades = Column(Integer, default=0)
-    win_rate = Column(Numeric(5, 2), default=0)
-    total_pnl = Column(Numeric(12, 2), default=0)
-    max_drawdown = Column(Numeric(12, 2), default=0)
-    sharpe_ratio = Column(Numeric(6, 4))
+    # total_trades = Column(Integer, default=0)
+    # winning_trades = Column(Integer, default=0)
+    # losing_trades = Column(Integer, default=0)
+    # win_rate = Column(Numeric(5, 2), default=0)
+    # total_pnl = Column(Numeric(12, 2), default=0)
+    # max_drawdown = Column(Numeric(12, 2), default=0)
+    # sharpe_ratio = Column(Numeric(6, 4))
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    started_at = Column(DateTime(timezone=True))
-    stopped_at = Column(DateTime(timezone=True))
+    # started_at = Column(DateTime(timezone=True))
+    # stopped_at = Column(DateTime(timezone=True))
     
     # Relationships
-    user = relationship("User", back_populates="strategies")
-    positions = relationship("Position", back_populates="strategy")
+    # user = relationship("User", back_populates="strategies")
+    # positions = relationship("Position", back_populates="strategy")
     orders = relationship("Order", back_populates="strategy")
     trades = relationship("Trade", back_populates="strategy")
+    # orders = relationship("Order", back_populates="trade") # Added relationship in Order, need back_populates here
+
     signals = relationship("Signal", back_populates="strategy", cascade="all, delete-orphan")
     
-    __table_args__ = (
-        Index('idx_strategy_user_status', 'user_id', 'status'),
-        Index('idx_strategy_underlying', 'underlying', 'status'),
-    )
+    # __table_args__ = (
+    #     Index('idx_strategy_user_status', 'user_id', 'status'),
+    #     Index('idx_strategy_underlying', 'underlying', 'status'),
+    # )
     
     def __repr__(self):
-        return f"<Strategy(id={self.id}, name={self.name}, status={self.status})>"
+        return f"<Strategy(id={self.id}, name={self.name})>"
 
 
 class Signal(Base):
@@ -1546,7 +1526,9 @@ class StrikePriceTickData(Base):
 class SignalLog(Base):
     """Trading signal logs for entry and exit signals"""
     __tablename__ = 'signal_logs'
-    
+    # Relationships
+    orders = relationship("Order", back_populates="signal_log")
+
     # Primary Key
     id = Column(BigInteger, primary_key=True, index=True)
     

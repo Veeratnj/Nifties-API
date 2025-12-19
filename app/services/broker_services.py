@@ -8,8 +8,7 @@ from dhanhq import dhanhq
 from SmartApi import SmartConnect
 from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
-import json
-import logging
+
 import pyotp
 from functools import wraps
 import time
@@ -33,8 +32,7 @@ from app.constants.broker_constants import (
     DHAN_REQUIRED_FIELDS
 )
 
-# Configure logging
-logger = logging.getLogger(__name__)
+
 
 
 # ==================== DATA MODELS ====================
@@ -112,14 +110,10 @@ def retry_on_failure(max_attempts: int = None, delay: float = None, backoff: flo
                 except Exception as e:
                     last_exception = e
                     if attempt < max_attempts:
-                        logger.warning(
-                            f"Attempt {attempt}/{max_attempts} failed for {func.__name__}: {str(e)}. "
-                            f"Retrying in {current_delay:.2f}s..."
-                        )
+
                         time.sleep(current_delay)
                         current_delay *= backoff
-                    else:
-                        logger.error(f"All {max_attempts} attempts failed for {func.__name__}")
+
             
             raise last_exception
         return wrapper
@@ -221,7 +215,7 @@ def angelone_get_auth(api_key: str, username: str, pwd: str, token: str) -> Auth
         AuthenticationError: If authentication fails
     """
     try:
-        logger.info(f"[Angel One] Authenticating user: {username}")
+
         obj = SmartConnect(api_key=api_key)
         
         # Generate TOTP and authenticate
@@ -236,7 +230,7 @@ def angelone_get_auth(api_key: str, username: str, pwd: str, token: str) -> Auth
         # Get user profile
         profile = obj.getProfile(refresh_token)
         
-        logger.info("[Angel One] Authentication successful")
+
         
         return AuthResponse(
             smart_api_obj=obj,
@@ -247,7 +241,7 @@ def angelone_get_auth(api_key: str, username: str, pwd: str, token: str) -> Auth
         )
         
     except Exception as e:
-        logger.error(f"[Angel One] Authentication failed: {str(e)}", exc_info=True)
+
         raise AuthenticationError(f"Angel One authentication failed: {str(e)}") from e
 
 
@@ -267,20 +261,19 @@ def angelone_place_order(smart_api_obj: SmartConnect, order_details: Dict[str, A
         OrderPlacementError: If order placement fails
     """
     try:
-        logger.info(f"[Angel One] Placing order: {order_details.get('tradingsymbol')} "
-                   f"{order_details.get('transactiontype')} x{order_details.get('quantity')}")
+
         
         order_response = smart_api_obj.placeOrder(order_details)
         
         if order_response:
-            logger.info(f"[Angel One] Order response: {json.dumps(order_response, indent=2)}")
+
             return order_response
         else:
-            logger.warning("[Angel One] Received empty response from placeOrder API")
+
             raise OrderPlacementError("Empty response from Angel One API")
             
     except Exception as e:
-        logger.error(f"[Angel One] Order placement failed: {str(e)}", exc_info=True)
+
         raise OrderPlacementError(f"Angel One order placement failed: {str(e)}") from e
 
 
@@ -344,7 +337,7 @@ def place_angelone_order_standalone(
         # Step 1: Validate order parameters
         is_valid, error_msg = validate_angelone_order_params(order_params)
         if not is_valid:
-            logger.error(f"[Angel One] Validation failed: {error_msg}")
+
             return BrokerResponse(
                 success=False,
                 message=f"Validation error: {error_msg}",
@@ -352,12 +345,11 @@ def place_angelone_order_standalone(
             )
         
         # Step 2: Authenticate with Angel One
-        logger.info(f"[Angel One] Authenticating user: {username}")
+
         auth_response = angelone_get_auth(api_key, username, pwd, token)
         
         # Step 3: Place the order
-        logger.info(f"[Angel One] Placing {order_params.get('transactiontype')} order "
-                   f"for {order_params.get('tradingsymbol')}")
+
         result = angelone_place_order(
             smart_api_obj=auth_response.smart_api_obj,
             order_details=order_params
@@ -365,7 +357,7 @@ def place_angelone_order_standalone(
         
         # Step 4: Process response
         if result and result.get('status'):
-            logger.info(f"[Angel One] ✅ Order placed successfully: Order ID {result.get('data', {}).get('orderid')}")
+
             return BrokerResponse(
                 success=True,
                 message="Order placed successfully",
@@ -373,7 +365,7 @@ def place_angelone_order_standalone(
                 broker=BrokerType.ANGEL_ONE.value
             )
         else:
-            logger.error(f"[Angel One] ❌ Order failed: {result}")
+
             return BrokerResponse(
                 success=False,
                 message=result.get('message', 'Order placement failed'),
@@ -382,7 +374,7 @@ def place_angelone_order_standalone(
             )
     
     except ValidationError as e:
-        logger.error(f"[Angel One] Validation error: {str(e)}")
+
         return BrokerResponse(
             success=False,
             message=f"Validation error: {str(e)}",
@@ -390,7 +382,7 @@ def place_angelone_order_standalone(
         )
     
     except AuthenticationError as e:
-        logger.error(f"[Angel One] Authentication error: {str(e)}")
+
         return BrokerResponse(
             success=False,
             message=f"Authentication failed: {str(e)}",
@@ -398,7 +390,7 @@ def place_angelone_order_standalone(
         )
     
     except OrderPlacementError as e:
-        logger.error(f"[Angel One] Order placement error: {str(e)}")
+
         return BrokerResponse(
             success=False,
             message=f"Order placement failed: {str(e)}",
@@ -406,7 +398,7 @@ def place_angelone_order_standalone(
         )
     
     except Exception as e:
-        logger.error(f"[Angel One] Unexpected error: {str(e)}", exc_info=True)
+
         return BrokerResponse(
             success=False,
             message=f"Unexpected error: {str(e)}",
@@ -416,7 +408,7 @@ def place_angelone_order_standalone(
 
 # ==================== DHAN FUNCTIONS ====================
 
-@retry_on_failure(max_attempts=3, delay=1.0, backoff=2.0)
+# @retry_on_failure(max_attempts=3, delay=1.0, backoff=2.0)
 def dhan_place_order(dhan_client: dhanhq, order_params: dict) -> dict:
     """
     Place order using Dhan API with retry logic
@@ -432,8 +424,7 @@ def dhan_place_order(dhan_client: dhanhq, order_params: dict) -> dict:
         OrderPlacementError: If order placement fails
     """
     try:
-        logger.info(f"[Dhan] Placing order: Security {order_params.get('security_id')} "
-                   f"{order_params.get('transaction_type')} x{order_params.get('quantity')}")
+
         
         result = dhan_client.place_order(
             security_id=order_params['security_id'],
@@ -445,11 +436,11 @@ def dhan_place_order(dhan_client: dhanhq, order_params: dict) -> dict:
             price=order_params['price']
         )
         
-        logger.info(f"[Dhan] Order response: {json.dumps(result, indent=2)}")
+
         return result
         
     except Exception as e:
-        logger.error(f"[Dhan] Order placement failed: {str(e)}", exc_info=True)
+
         raise OrderPlacementError(f"Dhan order placement failed: {str(e)}") from e
 
 
@@ -509,7 +500,7 @@ def place_dhan_order_standalone(
         # Step 1: Validate order parameters
         is_valid, error_msg = validate_dhan_order_params(order_params)
         if not is_valid:
-            logger.error(f"[Dhan] Validation failed: {error_msg}")
+
             return BrokerResponse(
                 success=False,
                 message=f"Validation error: {error_msg}",
@@ -517,17 +508,16 @@ def place_dhan_order_standalone(
             )
         
         # Step 2: Initialize Dhan client
-        logger.info(f"[Dhan] Initializing client: {client_id}")
+
         dhan_client = dhanhq(client_id=client_id, access_token=access_token)
         
         # Step 3: Place the order
-        logger.info(f"[Dhan] Placing {order_params.get('transaction_type')} order "
-                   f"for security {order_params.get('security_id')}")
+
         result = dhan_place_order(dhan_client, order_params)
         
         # Step 4: Process response (Dhan uses 'status': 'success'/'failure')
         if result and result.get('status') == 'success':
-            logger.info(f"[Dhan] ✅ Order placed successfully: Order ID {result.get('data', {}).get('orderId')}")
+
             return BrokerResponse(
                 success=True,
                 message="Order placed successfully",
@@ -535,7 +525,7 @@ def place_dhan_order_standalone(
                 broker=BrokerType.DHAN.value
             )
         else:
-            logger.error(f"[Dhan] ❌ Order failed: {result}")
+
             return BrokerResponse(
                 success=False,
                 message=result.get('remarks', 'Order placement failed'),
@@ -544,7 +534,7 @@ def place_dhan_order_standalone(
             )
     
     except ValidationError as e:
-        logger.error(f"[Dhan] Validation error: {str(e)}")
+
         return BrokerResponse(
             success=False,
             message=f"Validation error: {str(e)}",
@@ -552,7 +542,7 @@ def place_dhan_order_standalone(
         )
     
     except OrderPlacementError as e:
-        logger.error(f"[Dhan] Order placement error: {str(e)}")
+
         return BrokerResponse(
             success=False,
             message=f"Order placement failed: {str(e)}",
@@ -560,7 +550,7 @@ def place_dhan_order_standalone(
         )
     
     except Exception as e:
-        logger.error(f"[Dhan] Unexpected error: {str(e)}", exc_info=True)
+
         return BrokerResponse(
             success=False,
             message=f"Unexpected error: {str(e)}",

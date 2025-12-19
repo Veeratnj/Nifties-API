@@ -76,9 +76,17 @@ async def create_trade(
     db: Session = Depends(get_db)
 ):
     """Create new trade"""
+    # Check if user is authorized to create Master Trades (e.g. ADMIN/SUPERADMIN)
+    if current_user.role not in ["ADMIN", "SUPERADMIN"]:
+         raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to create Master Trades"
+        )
+
     try:
-        new_trade = TradeService.create_trade(db, trade_data, current_user.id)
-        logger.info(f"Trade created for user {current_user.id}: {new_trade.id}")
+        # Service now handles multi-user execution, no user_id passed
+        new_trade = TradeService.create_trade(db, trade_data)
+        logger.info(f"Master Trade created by {current_user.id}: {new_trade.id}")
         return ResponseSchema(
             data=new_trade,
             status=201,
@@ -108,7 +116,8 @@ async def update_trade(
             detail="Trade not found"
         )
     
-    if not (trade.user_id == current_user.id or current_user.role == "admin"):
+    # Only Admin can update Master Trade
+    if current_user.role not in ["ADMIN", "SUPERADMIN"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update this trade"
@@ -140,7 +149,8 @@ async def delete_trade(
             detail="Trade not found"
         )
     
-    if not (trade.user_id == current_user.id or current_user.role == "admin"):
+    # Only Admin can delete Master Trade
+    if current_user.role not in ["ADMIN", "SUPERADMIN"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this trade"
@@ -189,7 +199,8 @@ async def close_trade(
             detail="Trade not found"
         )
     
-    if not (trade.user_id == current_user.id or current_user.role == "admin"):
+    # Only Admin can close Master Trade (which triggers exits for all)
+    if current_user.role not in ["ADMIN", "SUPERADMIN"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to close this trade"

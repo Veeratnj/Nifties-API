@@ -178,9 +178,10 @@ class TradeUpdate(BaseModel):
 
 class TradeSchema(TradeBase):
     id: int
-    user_id: int
+    # user_id removed
     strategy_id: Optional[int] = None
     position_id: Optional[int] = None
+    signal_id: Optional[int] = None # Added signal_id
     
     # Exit details
     exit_qty: int
@@ -276,6 +277,7 @@ class OrderSchema(OrderBase):
     user_id: int
     strategy_id: Optional[int] = None
     position_id: Optional[int] = None
+    trade_id: Optional[int] = None # Added trade_id
     
     # Internal tracking
     order_id: Optional[str] = None  # Internal order ID string
