@@ -41,7 +41,7 @@ class SignalService:
                 token=signal_data.token,
                 signal_type=signal_data.signal,
                 unique_id=signal_data.unique_id,
-                strike_price_token=signal_data.strike_price_token,
+                strike_price_token=signal_data.strike_data.token,
                 strategy_code=signal_data.strategy_code,
                 signal_category="ENTRY",
                 timestamp=datetime.now(ZoneInfo("Asia/Kolkata"))
@@ -86,7 +86,7 @@ class SignalService:
                 token=signal_data.token,
                 signal_type=signal_data.signal,
                 unique_id=signal_data.unique_id,
-                strike_price_token=signal_data.strike_price_token,
+                strike_price_token=signal_data.strike_data.token,
                 strategy_code=signal_data.strategy_code,
                 signal_category="EXIT",
                 timestamp=datetime.now(ZoneInfo("Asia/Kolkata"))
@@ -122,7 +122,7 @@ class SignalService:
     @staticmethod
     def process_entry_signal_v3(db: Session, signal_data: SignalEntryRequest) -> Dict[str, Any]:
 
-        print('check point 0')
+        print('check point 0',signal_data.strike_data.token)
         strategy_id = (
             db.query(Strategy.id)
             .filter(Strategy.name == signal_data.strategy_code)
@@ -135,7 +135,7 @@ class SignalService:
             token=signal_data.token,
             signal_type=signal_data.signal,
             unique_id=signal_data.unique_id,
-            strike_price_token=signal_data.strike_price_token,
+            strike_price_token=signal_data.strike_data.token,
             strategy_code=signal_data.strategy_code,
             signal_category="ENTRY",
             timestamp=datetime.now(ZoneInfo("Asia/Kolkata"))
@@ -168,7 +168,7 @@ class SignalService:
             #         Order(
             #             user_id=trader_id,
             #             signal_log_id=signal_log_id,
-            #             symbol=signal_data.strike_price_token,
+            #             symbol=signal_data.strike_data.token,
             #             option_type="CE",
             #             qty=35,
             #             entry_price=0,
@@ -181,22 +181,26 @@ class SignalService:
 
     @staticmethod
     def process_exit_signal_v3(db: Session, signal_data: SignalExitRequest) -> Dict[str, Any]:
+        signal_log_id = db.query(SignalLog.id).filter(SignalLog.unique_id == signal_data.unique_id).scalar()
+        print('exit check point 0',signal_log_id)
         db.add(SignalLog(
             token=signal_data.token,
             signal_type=signal_data.signal,
             unique_id=signal_data.unique_id,
-            strike_price_token=signal_data.strike_price_token,
+            strike_price_token=signal_data.strike_data.token,
             strategy_code=signal_data.strategy_code,
             signal_category="EXIT",
             timestamp=datetime.now(ZoneInfo("Asia/Kolkata"))
         ))
         db.commit()
+        print('exit check point 1')
 
-        signal_log_id = db.query(SignalLog.id).filter(SignalLog.unique_id == signal_data.unique_id).scalar()
+        print('exit check point 2',signal_log_id)
         traders_ids = get_all_traders_id(db=db)
+        print('exit check point 3',traders_ids)
 
         for trader_id in traders_ids:
-            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data)).start()
+            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data,db)).start()
 
 
             

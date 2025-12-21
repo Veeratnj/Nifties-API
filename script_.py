@@ -5,7 +5,7 @@ Script to create fake test users and trading data for development/testing
 
 from app.db.db import SessionLocal
 from app.models.models import (
-    User, Broker, UserBrokerAccount, UserTradingSettings, 
+    User, Broker, UserTradingSettings, 
     UserRiskSettings, UserUISettings, UserRole, Strategy, 
     StrategyStatus, Order, OrderType, OrderStatus, Position, 
     PositionStatus, Trade
@@ -26,7 +26,7 @@ def create_sample_users(db):
     print("\n🚀 Creating sample users for each role...")
     
     # Define user roles (except SUPERADMIN)
-    test_roles = [UserRole.USER, UserRole.TRADER, UserRole.ADMIN]
+    test_roles = [UserRole.USER, ]
     created_users = []
     
     for role in test_roles:
@@ -287,7 +287,7 @@ def run_fake_data_process():
     db = SessionLocal()
     try:
         sample_users = create_sample_users(db)
-        inject_fake_trading_data(db, sample_users)
+        # inject_fake_trading_data(db, sample_users)
         print("🎉 All fake data created successfully!")
     except Exception as e:
         db.rollback()

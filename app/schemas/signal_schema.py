@@ -6,13 +6,24 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 
+class StrikeData(BaseModel):
+    """Schema for strike data details"""
+    token: str = Field(..., description="Token of the strike")
+    exchange: str = Field(..., description="Exchange identifier")
+    index_name: str = Field(..., description="Name of the index")
+    DOE: str = Field(..., description="Date of Expiry")
+    strike_price: float = Field(..., description="Strike price value")
+    position: str = Field(..., description="Type of position (CE/PE)")
+    symbol: str = Field(..., description="Trading symbol")
+
+
 class SignalBase(BaseModel):
     """Base schema for trading signals"""
     token: str = Field(..., description="Token identifier (e.g., '23')")
     signal: str = Field(..., description="Signal type (e.g., 'BUY_ENTRY', 'SELL_ENTRY', 'BUY_EXIT', 'SELL_EXIT')")
     unique_id: str = Field(..., description="Unique ID for this signal")
-    strike_price_token: str = Field(..., description="Strike price token")
     strategy_code: str = Field(..., description="Code of the strategy")
+    strike_data: StrikeData = Field(..., description="Nested strike data information")
 
 
 class SignalEntryRequest(SignalBase):

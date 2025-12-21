@@ -29,7 +29,7 @@ async def get_orders(
     - USER/TRADER: See only their own orders
     """
     try:
-        print('qwe123')
+        print('qwe1234')
         # Pass user role for access control
         orders = OrderService.get_all_orders(
             db, 
@@ -38,6 +38,7 @@ async def get_orders(
         )
         return ResponseSchema(data=orders, message="Orders retrieved successfully")
     except Exception as e:
+        print("error is ",e)
         logger.error(f"Error getting orders: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

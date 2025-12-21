@@ -3,11 +3,13 @@ Position service - Business logic for position/live trades operations
 """
 
 import logging
+from datetime import datetime, date
 from typing import List, Optional
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.models import Position, Strategy
-from app.schemas.schema import PositionCreate, PositionUpdate
+from app.models.models import Order, Strategy
+from app.schemas.schema import OrderCreate, OrderUpdate # Replaced PositionCreate/Update with Order ones or kept these if needed for imports elsewhere
 
 logger = logging.getLogger(__name__)
 
@@ -18,93 +20,107 @@ class PositionService:
     @staticmethod
     def get_all_positions(db: Session, user_id: Optional[int] = None, user_role: str = "USER") -> List[dict]:
         """
-        Get positions based on user role:
-        - SUPERADMIN/ADMIN: Get ALL positions from all users
-        - USER/TRADER: Get only their own positions
+        Get open trades from Order table based on user role:
+        - SUPERADMIN/ADMIN: Get ALL open trades from all users
+        - USER/TRADER: Get only their own open trades
         """
         try:
-            query = db.query(Position).options(joinedload(Position.strategy))
+            today = date.today()
+            # We filter for orders where exit_price is None or 0 (indicating they are still open)
+            # and status is EXECUTED or PLACED
+            # ADDED: Filtering by entry_time to show only today's trades
+            query = db.query(Order).options(joinedload(Order.strategy)).filter(
+                (Order.exit_price == None) | (Order.exit_price == 0),
+                Order.is_deleted == False,
+                func.date(Order.entry_time) == today
+            )
             
             # Role-based filtering
             if user_role in ["SUPERADMIN", "ADMIN"]:
-                # Admins see all positions
-                logger.info(f"Admin user accessing all positions")
+                logger.info(f"Admin user accessing all open trades")
             else:
-                # Regular users see only their positions
                 if user_id:
-                    query = query.filter(Position.user_id == user_id)
-                    logger.info(f"User {user_id} accessing their positions")
+                    query = query.filter(Order.user_id == user_id)
+                    logger.info(f"User {user_id} accessing their open trades")
+                else:
+                    # If no user_id and not admin, return empty list for security
+                    logger.warning("No user_id provided for non-admin user")
+                    return []
             
-            positions = query.all()
-            logger.info(f"Retrieved {len(positions)} positions")
+            orders = query.all()
+            logger.info(f"Retrieved {len(orders)} open trades from orders table")
             
             # Transform to frontend format
-            return [PositionService._transform_position(p) for p in positions]
+            return [PositionService._transform_order_to_position(o) for o in orders]
         except Exception as e:
-            logger.error(f"Error retrieving positions: {str(e)}")
+            logger.error(f"Error retrieving open trades: {str(e)}")
             raise
 
     @staticmethod
-    def _transform_position(position: Position) -> dict:
-        """Transform Position model to frontend expected format"""
-        # Calculate P&L if not set
-        pnl = float(position.total_pnl or position.unrealized_pnl or 0)
-        pnl_percent = float(position.pnl_percent or 0)
+    def _transform_order_to_position(order: Order) -> dict:
+        """Transform Order model to frontend expected format for positions"""
+        # P&L calculation (mock/placeholder as orders might not have live P&L)
+        # In a real scenario, this might fetch LTP and calculate
+        pnl = 0.0
+        pnl_percent = 0.0
         
         # Get strategy name
         strategy_name = None
-        if position.strategy:
-            strategy_name = position.strategy.name
+        if order.strategy:
+            strategy_name = order.strategy.name
         
-        # Map status
-        status = "ACTIVE" if position.status.value == "OPEN" else "CLOSED"
+        # Status mapping for frontend
+        status = "ACTIVE"
         
         return {
-            "id": position.id,
-            "user_id": position.user_id,
-            "symbol": position.symbol,
-            "index": position.underlying,  # Map 'underlying' to 'index'
-            "strike": position.strike_price,  # Map 'strike_price' to 'strike'
-            "type": position.option_type,  # Map 'option_type' to 'type'
-            "qty": position.qty,
-            "entry_price": float(position.avg_entry_price),
-            "current_price": float(position.avg_exit_price or position.avg_entry_price),
+            "id": order.id,
+            "user_id": order.user_id,
+            "symbol": order.symbol,
+            "index": getattr(order, "underlying", "NIFTY"),  # Safeguard if field missing
+            "strike": 0, # Placeholder if not in Order model
+            "type": order.option_type,
+            "qty": order.qty,
+            "entry_price": float(order.entry_price or 0),
+            "current_price": float(order.entry_price or 0), # Default to entry if live price not available
             "pnl": pnl,
             "pnl_percent": pnl_percent,
             "status": status,
             "strategy": strategy_name,
-            "timestamp": position.entry_time,
-            "created_at": position.entry_time,
-            "updated_at": position.updated_at or position.entry_time
+            "timestamp": order.entry_time,
+            "created_at": order.entry_time,
+            "updated_at": order.entry_time
         }
 
     @staticmethod
     def get_active_positions(db: Session, user_id: int) -> List[dict]:
-        """Get active/open positions for user, formatted for frontend"""
+        """Get active/open trades for user from Order table (Today only)"""
         try:
-            positions = db.query(Position).options(joinedload(Position.strategy)).filter(
-                Position.user_id == user_id,
-                Position.status == "OPEN"
+            today = date.today()
+            orders = db.query(Order).options(joinedload(Order.strategy)).filter(
+                Order.user_id == user_id,
+                (Order.exit_price == None) | (Order.exit_price == 0),
+                Order.is_deleted == False,
+                func.date(Order.entry_time) == today
             ).all()
             
-            logger.info(f"Retrieved {len(positions)} active positions for user: {user_id}")
-            return [PositionService._transform_position(p) for p in positions]
+            logger.info(f"Retrieved {len(orders)} active trades for user: {user_id}")
+            return [PositionService._transform_order_to_position(o) for o in orders]
         except Exception as e:
-            logger.error(f"Error retrieving active positions: {str(e)}")
+            logger.error(f"Error retrieving active trades: {str(e)}")
             raise
 
     @staticmethod
     def get_position_by_id(db: Session, position_id: int) -> Optional[dict]:
-        """Get position by ID, formatted for frontend"""
+        """Get trade by ID from Order table, formatted for frontend"""
         try:
-            position = db.query(Position).options(joinedload(Position.strategy)).filter(
-                Position.id == position_id
+            order = db.query(Order).options(joinedload(Order.strategy)).filter(
+                Order.id == position_id
             ).first()
             
-            if position:
-                logger.info(f"Retrieved position: {position_id}")
-                return PositionService._transform_position(position)
+            if order:
+                logger.info(f"Retrieved trade: {position_id}")
+                return PositionService._transform_order_to_position(order)
             return None
         except Exception as e:
-            logger.error(f"Error retrieving position {position_id}: {str(e)}")
+            logger.error(f"Error retrieving trade {position_id}: {str(e)}")
             raise

@@ -32,7 +32,6 @@ async def send_entry_signal(
         "token": "23",
         "signal": "BUY_ENTRY",
         "unique_id": "unique_123",
-        "strike_price_token": "45678",
         "strategy_code": "STRATEGY_001"
     }
     ```
@@ -74,7 +73,6 @@ async def send_exit_signal(
         "token": "23",
         "signal": "BUY_EXIT",
         "unique_id": "unique_123",
-        "strike_price_token": "45678",
         "strategy_code": "STRATEGY_001"
     }
     ```
@@ -125,7 +123,6 @@ async def send_entry_signal_v2(
         "token": "23",
         "signal": "BUY_ENTRY",
         "unique_id": "unique_123",
-        "strike_price_token": "45678",
         "strategy_code": "STRATEGY_001"
     }
     ```
@@ -200,7 +197,6 @@ async def send_exit_signal_v2(
         "token": "23",
         "signal": "BUY_EXIT",
         "unique_id": "unique_123",
-        "strike_price_token": "45678",
         "strategy_code": "STRATEGY_001"
     }
     ```
@@ -350,6 +346,7 @@ async def send_exit_signal_v3(
             data={}
         )
     except Exception as e:
+        print('Exception',e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to process exit signal: {str(e)}"

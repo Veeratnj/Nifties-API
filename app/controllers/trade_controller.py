@@ -31,6 +31,7 @@ async def get_trades(
     """
     try:
         # Pass user role for access control
+        print("hihi")
         positions = PositionService.get_all_positions(
             db, 
             user_id=current_user.id,

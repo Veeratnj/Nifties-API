@@ -172,7 +172,7 @@ class EnhancedSignalService:
                 token=signal_data.token,
                 signal_type=signal_data.signal,
                 unique_id=signal_data.unique_id,
-                strike_price_token=signal_data.strike_price_token,
+                strike_price_token=signal_data.strike_data.token,
                 strategy_code=signal_data.strategy_code,
                 signal_category="ENTRY",
                 timestamp=datetime.now(EnhancedSignalService.IST)
@@ -183,7 +183,7 @@ class EnhancedSignalService:
             # 2. Get symbol details
             symbol = EnhancedSignalService._get_symbol_details(db, signal_data.token)
             strike_symbol = EnhancedSignalService._get_strike_symbol_details(
-                db, signal_data.strike_price_token
+                db, signal_data.strike_data.token
             )
             
             if not symbol:
@@ -194,7 +194,7 @@ class EnhancedSignalService:
                 # Create a temporary strike symbol object with defaults
                 strike_symbol = type('obj', (object,), {
                     'symbol': f"{symbol.symbol}_STRIKE",
-                    'token': signal_data.strike_price_token,
+                    'token': signal_data.strike_data.token,
                     'strike_price': Decimal('0'),
                     'option_type': 'CE',
                     'expiry_date': datetime.now(EnhancedSignalService.IST) + timedelta(days=7),
@@ -308,7 +308,7 @@ class EnhancedSignalService:
                 token=signal_data.token,
                 signal_type=signal_data.signal,
                 unique_id=signal_data.unique_id,
-                strike_price_token=signal_data.strike_price_token,
+                strike_price_token=signal_data.strike_data.token,
                 strategy_code=signal_data.strategy_code,
                 signal_category="EXIT",
                 timestamp=datetime.now(EnhancedSignalService.IST)
@@ -319,7 +319,7 @@ class EnhancedSignalService:
             # 2. Get symbol details
             symbol = EnhancedSignalService._get_symbol_details(db, signal_data.token)
             strike_symbol = EnhancedSignalService._get_strike_symbol_details(
-                db, signal_data.strike_price_token
+                db, signal_data.strike_data.token
             )
             
             # 3. Find all open positions matching this signal
