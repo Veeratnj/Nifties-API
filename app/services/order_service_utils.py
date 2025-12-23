@@ -28,6 +28,7 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
     strike_data = signal_data.strike_data
     dhan_creds=get_dhan_credentials(trader_id=trader_id, db=db)
     print('Dhan Credentials:', dhan_creds.client_id,dhan_creds.access_token,dhan_creds.user_id)
+    transaction_list = ['buy_entry','sell_entry']
     if dhan_creds:
         # dhan_context=DhanContext(client_id=dhan_creds['client_id'], access_token=dhan_creds['access_token'])
         dhan_context = DhanContext(client_id=dhan_creds.client_id, access_token=dhan_creds.access_token)
@@ -35,14 +36,15 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
         dhan_res = dhan.place_order(
         security_id=strike_data.token,
         exchange_segment=dhan.NSE_FNO,
-        transaction_type=dhan.BUY if signal_data.signal.lower() == 'buy_entry' else dhan.SELL,
+        transaction_type=dhan.BUY if signal_data.signal.lower() in transaction_list else dhan.SELL,
         quantity=35,
         order_type=dhan.MARKET,
         product_type=dhan.INTRA,
         price=0,
         )
         print('Dhan Response:', dhan_res)
-        db.add(
+        if signal_data.signal.lower() in transaction_list:
+            db.add(
             Order(
                 user_id=trader_id,
                 signal_log_id=signal_log_id,
@@ -55,7 +57,15 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
                 is_deleted=False
             )
         )
-        db.commit()
+            db.commit()
+        else:
+            #get open order from orders table for the particular trader_id and signal_log_id
+            open_order = db.query(Order).filter(Order.user_id == trader_id, Order.signal_log_id == signal_log_id, Order.status == "OPEN").first()
+            if open_order:
+                #update the open order status to closed
+                open_order.status = "CLOSED"
+                open_order.exit_time = datetime.now(ZoneInfo("Asia/Kolkata"))
+                db.commit()
         
 
 
