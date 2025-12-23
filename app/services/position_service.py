@@ -84,7 +84,7 @@ class PositionService:
             "current_price": float(order.entry_price or 0), # Default to entry if live price not available
             "pnl": pnl,
             "pnl_percent": pnl_percent,
-            "status": status,
+            "status": order.status,
             "strategy": strategy_name,
             "timestamp": order.entry_time,
             "created_at": order.entry_time,
