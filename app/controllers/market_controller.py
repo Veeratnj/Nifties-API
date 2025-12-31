@@ -185,3 +185,42 @@ async def create_pnl(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error creating PnL record"
         )
+
+
+
+from fastapi import APIRouter, Depends
+from app.services.ltp_ws_service import get_ltp, start_ltp_websocket
+import asyncio
+
+router = APIRouter()
+
+# Example callback function to log LTP
+def handle_ltp(token, ltp):
+    print(f"📈 Token {token} LTP: {ltp}")
+
+@router.post("/start-ltp/{token}")
+async def start_ltp(token: str, app=Depends(lambda: app)):
+    """
+    Start LTP WebSocket for a token in background
+    """
+    # Run in a separate thread to avoid blocking FastAPI
+    asyncio.create_task(
+        asyncio.to_thread(
+            start_ltp_websocket,
+            dhan_context,  # your DhanContext object here
+            token,
+            app,
+            handle_ltp
+        )
+    )
+    return {"status": "LTP WebSocket started", "token": token}
+
+@router.get("/ltp/{token}")
+async def read_ltp(token: str, app=Depends(lambda: app)):
+    ltp = await get_ltp(app, token)
+    if ltp is None:
+        return {"token": token, "ltp": None, "status": "waiting for first tick"}
+    return {"token": token, "ltp": ltp}
+
+
+

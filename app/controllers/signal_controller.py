@@ -5,12 +5,14 @@ Controller for Trading Signal APIs
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from fastapi import BackgroundTasks
+from fastapi import Request
 
 from app.db.db import get_db
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest, SignalResponse
 from app.services.signal_service import SignalService
 from app.services.enhanced_signal_services import EnhancedSignalService
-
+import asyncio
 router = APIRouter(
     prefix="/db/signals",
     tags=["Trading Signals"]
@@ -316,9 +318,25 @@ async def get_active_positions(
 @router.post("/entry/v3", response_model=SignalResponse, status_code=status.HTTP_201_CREATED)
 async def send_entry_signal_v3(
     signal_data: SignalEntryRequest,
-    db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
+    background_tasks: BackgroundTasks=None,
+    
 ):
     try:
+        try:
+            from app.services.ltp_ws_service import start_ltp_websocket
+            background_tasks.add_task(
+                asyncio.to_thread,
+                start_ltp_websocket,
+                signal_data.token,   # token from your request
+                request.app,               # your FastAPI app instance if needed for app.state
+            )
+            logger.info(f"LTP WebSocket started for token {signal_data.token}")
+        except Exception as e:
+            print('Exception',e)
+            logger.error(f"Failed to start LTP WebSocket: {str(e)}")    
+
         SignalService.process_entry_signal_v3(db=db, signal_data=signal_data)
         return SignalResponse(
             success=True,

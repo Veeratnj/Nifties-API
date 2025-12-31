@@ -12,7 +12,7 @@ from app.models.models import Base
 from app.db.db import engine
 from app.middleware.middleware import TimerMiddleware, LoggingMiddleware, AuthMiddleware, ErrorHandlingMiddleware
 from app.constants.const import API_TITLE, API_DESCRIPTION, API_VERSION, CORS_ORIGINS
-
+import asyncio
 # Import all routers
 from app.controllers import (
     health_controller,
@@ -129,6 +129,8 @@ create_app()
 async def startup_event():
     """Execute on application startup"""
     logger.info("Application startup")
+    app.state.ltp = {}
+    app.state.ltp_lock = asyncio.Lock()
 
 
 # Shutdown event
