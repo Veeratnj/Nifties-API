@@ -2,7 +2,7 @@
 Trade controller - Trade management endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -21,6 +21,7 @@ router = APIRouter(prefix="/api/trades", tags=["trades"])
 
 @router.get("", response_model=ResponseSchema)
 async def get_trades(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -31,9 +32,10 @@ async def get_trades(
     """
     try:
         # Pass user role for access control
-        print("hihi")
+        ltp_data = getattr(request.app.state, "ltp", {})
         positions = PositionService.get_all_positions(
             db, 
+            ltp_data=ltp_data,
             user_id=current_user.id,
             user_role=current_user.role.value  # Pass the role enum value
         )

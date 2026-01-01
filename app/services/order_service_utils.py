@@ -5,6 +5,7 @@ from app.models.models import Order, User, DhanCredentials
 from sqlalchemy.orm import Session
 from typing import List
 from dhanhq import dhanhq, DhanContext
+from fastapi import Request
 
 def get_all_traders_id(db: Session) -> List[int]:
     return list(map(lambda x: x.id, db.query(User.id).filter(User.role == "TRADER").all()))
@@ -51,7 +52,7 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
                 symbol=strike_data.symbol,
                 option_type=strike_data.position,
                 qty=35,
-                entry_price=0,
+                entry_price=request.app.state.ltp.setdefault(strike_data.token, 0),
                 status="OPEN",
                 entry_time=datetime.now(ZoneInfo("Asia/Kolkata")),
                 is_deleted=False

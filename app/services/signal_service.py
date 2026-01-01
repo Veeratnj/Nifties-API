@@ -6,6 +6,7 @@ from typing import Dict, Any
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from dhanhq import dhanhq, DhanContext
+from fastapi import Request
 
 
 
@@ -120,7 +121,7 @@ class SignalService:
 
 
     @staticmethod
-    def process_entry_signal_v3(db: Session, signal_data: SignalEntryRequest) -> Dict[str, Any]:
+    def process_entry_signal_v3(db: Session, signal_data: SignalEntryRequest,request:Request) -> Dict[str, Any]:
 
         print('check point 0',signal_data.strike_data.token)
         strategy_id = (

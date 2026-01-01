@@ -36,6 +36,12 @@ class SignalExitRequest(SignalBase):
     pass
 
 
+class LTPInsertRequest(BaseModel):
+    """Schema for manual LTP insertion"""
+    token: str = Field(..., description="Token of the strike")
+    price: float = Field(..., description="Last traded price to store")
+
+
 class SignalResponse(BaseModel):
     """Response schema for signal operations"""
     success: bool

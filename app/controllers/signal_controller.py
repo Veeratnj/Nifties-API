@@ -3,13 +3,15 @@ Controller for Trading Signal APIs
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+import logging
+
 from sqlalchemy.orm import Session
 from typing import Optional
 from fastapi import BackgroundTasks
 from fastapi import Request
 
 from app.db.db import get_db
-from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest, SignalResponse
+from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest, SignalResponse, LTPInsertRequest
 from app.services.signal_service import SignalService
 from app.services.enhanced_signal_services import EnhancedSignalService
 import asyncio
@@ -17,6 +19,9 @@ router = APIRouter(
     prefix="/db/signals",
     tags=["Trading Signals"]
 )
+
+logger = logging.getLogger(__name__)
+
 
 
 @router.post("/entry", response_model=SignalResponse, status_code=status.HTTP_201_CREATED)
@@ -324,20 +329,21 @@ async def send_entry_signal_v3(
     
 ):
     try:
-        try:
-            from app.services.ltp_ws_service import start_ltp_websocket
-            background_tasks.add_task(
-                asyncio.to_thread,
-                start_ltp_websocket,
-                signal_data.token,   # token from your request
-                request.app,               # your FastAPI app instance if needed for app.state
-            )
-            logger.info(f"LTP WebSocket started for token {signal_data.token}")
-        except Exception as e:
-            print('Exception',e)
-            logger.error(f"Failed to start LTP WebSocket: {str(e)}")    
+        # try:
+        #     from app.services.ltp_ws_service import start_ltp_websocket
+        #     background_tasks.add_task(
+        #         asyncio.to_thread,
+        #         start_ltp_websocket,
+        #         signal_data.token,   # token from your request
+        #         request.app,               # your FastAPI app instance if needed for app.state
+        #     )
+        #     logger.info(f"LTP WebSocket started for token {signal_data.strike_data.token}")
+        #     print('LTP WebSocket started for token',signal_data.strike_data.token)
+        # except Exception as e:
+        #     print('Exception',e)
+        #     logger.error(f"Failed to start LTP WebSocket: {str(e)}")    
 
-        SignalService.process_entry_signal_v3(db=db, signal_data=signal_data)
+        SignalService.process_entry_signal_v3(db=db, signal_data=signal_data,request=request)
         return SignalResponse(
             success=True,
             message="Entry signal v3 processed successfully",
@@ -368,4 +374,51 @@ async def send_exit_signal_v3(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to process exit signal: {str(e)}"
+        )
+
+
+@router.post("/strike-ltp", response_model=SignalResponse, status_code=status.HTTP_200_OK)
+async def insert_strike_ltp(
+    ltp_data: LTPInsertRequest,
+    request: Request
+):
+    """
+    **Manual LTP Insertion** - Stores LTP value in application state.
+    
+    This endpoint allows manual insertion of LTP values into the application's
+    global state `app.state.ltp`. This is useful for testing or for symbols
+    not covered by the automated WebSocket.
+    
+    **Request Body Example:**
+    ```json
+    {
+        "token": "59200",
+        "price": 289.04
+    }
+    ```
+    """
+    try:
+        # Ensure LTP storage exists
+        if not hasattr(request.app.state, "ltp"):
+            request.app.state.ltp = {}
+            
+        # Store LTP in global state
+        token = ltp_data.token
+        price = ltp_data.price
+        
+        request.app.state.ltp[token] = price
+        
+        logger.info(f"Manual LTP insertion for token {token}: {price}")
+        
+        return SignalResponse(
+            success=True,
+            message=f"LTP for token {token} stored successfully",
+            data={"token": token, "price": price}
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to insert manual LTP: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to store LTP: {str(e)}"
         )
