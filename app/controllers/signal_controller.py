@@ -401,9 +401,11 @@ async def insert_strike_ltp(
             ltp=ltp_data.ltp,
             timestamp=datetime.datetime.now().isoformat()
         )
-        TickLTPService.insert_strike_ltp(db, db_insert_data)
+        db.add(db_insert_data)
+        db.commit()
+        # TickLTPService.insert_strike_ltp(db, db_insert_data)
 
-        logger.info(f"Manual LTP insertion for token {ltp_data.token}: {ltp_data.ltp}")
+        # logger.info(f"Manual LTP insertion for token {ltp_data.token}: {ltp_data.ltp}")
         
         return SignalResponse(
             success=True,
