@@ -10,6 +10,7 @@ from app.db.db import get_db
 from app.schemas.schema import TradeSchema, TradeCreate, TradeUpdate, ResponseSchema, PositionSchema
 from app.services.trade_services import TradeService
 from app.services.position_service import PositionService
+from app.services.dashboard_service import get_today_trades_service
 from app.models.models import User
 from app.utils.security import get_current_user, check_user_owns_resource
 import logging
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/trades", tags=["trades"])
 
 
-@router.get("", response_model=ResponseSchema)
+@router.get("/today", response_model=ResponseSchema)
 async def get_trades(
     request: Request,
     current_user: User = Depends(get_current_user),
@@ -31,11 +32,9 @@ async def get_trades(
     - USER/TRADER: See only their own trades
     """
     try:
-        # Pass user role for access control
-        ltp_data = getattr(request.app.state, "ltp", {})
+        # Service now handles LTP retrieval via DB joins
         positions = PositionService.get_all_positions(
             db, 
-            ltp_data=ltp_data,
             user_id=current_user.id,
             user_role=current_user.role.value  # Pass the role enum value
         )
@@ -218,3 +217,13 @@ async def close_trade(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error closing trade"
         )
+
+
+
+@router.get("", response_model=ResponseSchema)
+async def get_today_trades(request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)):
+    """Get today trades for current user"""
+    print("get_today_trades12345")
+    return ResponseSchema(data=get_today_trades_service(current_user,db), message="Today trades retrieved successfully")

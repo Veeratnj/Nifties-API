@@ -52,7 +52,7 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
                 symbol=strike_data.symbol,
                 option_type=strike_data.position,
                 qty=35,
-                entry_price=request.app.state.ltp.setdefault(strike_data.token, 0),
+                entry_price=db.query(StrikePriceTickData.ltp).filter(StrikePriceTickData.symbol == strike_data.symbol).order_by(StrikePriceTickData.id.desc()).first()[0],
                 status="OPEN",
                 entry_time=datetime.now(ZoneInfo("Asia/Kolkata")),
                 is_deleted=False
@@ -65,6 +65,7 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
             if open_order:
                 #update the open order status to closed
                 open_order.status = "CLOSED"
+                open_order.exit_price = db.query(StrikePriceTickData.ltp).filter(StrikePriceTickData.symbol == strike_data.symbol).order_by(StrikePriceTickData.id.desc()).first()[0]
                 open_order.exit_time = datetime.now(ZoneInfo("Asia/Kolkata"))
                 db.commit()
         

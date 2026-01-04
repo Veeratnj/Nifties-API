@@ -86,7 +86,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """Middleware for authentication logging"""
     
     # Public endpoints that don't require authentication
-    PUBLIC_ENDPOINTS = ["/", "/health", "/api/auth/login", "/api/auth/register", "/docs", "/openapi.json", "/redoc", "/db"]
+    PUBLIC_ENDPOINTS = ["/", "/health", "/api/auth/login", "/api/auth/register", "/docs", "/openapi.json", "/redoc", "/db",]
     
     async def dispatch(self, request: Request, call_next) -> Response:
         # Check if endpoint is public
@@ -95,6 +95,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         
         # Get token from header
         auth_header = request.headers.get("authorization")
+        print("auth_header",auth_header)
         
         if not auth_header or not auth_header.startswith("Bearer "):
             logger.warning(f"Unauthorized access attempt to {request.url.path}")

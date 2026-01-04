@@ -1502,25 +1502,45 @@ class StrikePriceTickData(Base):
     """Strike Price LTP data associated with spot symbols"""
     __tablename__ = 'strike_price_tick_data'
     
-    # Primary Key
-    id = Column(BigInteger, primary_key=True, index=True)
-    
-    # Foreign Keys
-    symbol_master_id = Column(Integer, ForeignKey('symbol_master.id', ondelete='CASCADE'), nullable=False, index=True)    
-    # Strike Price
-    strike_price = Column(Numeric(10, 2), nullable=False, index=True)
-    # LTP
-    ltp = Column(Numeric(10, 2), nullable=False)
-    # Timestamp
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+    id = Column(
+        BigInteger,
+        primary_key=True,
+        index=True,
+        autoincrement=True
+    )
+
+    token = Column(
+        Text,
+        nullable=False,
+        index=True
+    )
+
+    symbol = Column(
+        Text,
+        nullable=False,
+        index=True
+    )
+
+    ltp = Column(
+        Numeric(10, 2),
+        nullable=False
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+
     # Indexes
     __table_args__ = (
-        Index('idx_strike_price_spot_symbol', 'symbol_master_id', 'strike_price'),
+        Index('idx_strike_price_token', 'token'),
+        Index('idx_strike_price_symbol', 'symbol'),
         Index('idx_strike_price_created', 'created_at'),
     )
     
     def __repr__(self):
-        return f"<StrikePriceTickData(id={self.id}, spot_symbol_id={self.spot_symbol_id}, strike_price={self.strike_price}, ltp={self.ltp})>"
+        return f"<StrikePriceTickData(id={self.id}, token={self.token}, symbol={self.symbol}, ltp={self.ltp})>"
 
 
 class SignalLog(Base):

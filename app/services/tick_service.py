@@ -156,33 +156,21 @@ class TickLTPService:
     @staticmethod
     def insert_strike_ltp(db: Session, strike_ltp_data: StrikePriceLTPInsert) -> StrikePriceTickData:
         """
-        Insert strike price LTP data
-        
-        Args:
-            db: Database session
-            strike_ltp_data: Strike price LTP data to insert
-            
-        Returns:
-            Created StrikePriceTickData object
-            
-        Raises:
-            Exception: If database operation fails
+        Insert strike price LTP data directly without master lookup
         """
         try:
-            print('check 0.1')
-            symbol_master_id = db.query(SymbolMaster).filter(
-                    SymbolMaster.token == strike_ltp_data.strike_price_token,
-                    SymbolMaster.instrument_type=='OPT_INDEX',
-                    SymbolMaster.is_active == True,
-                    SymbolMaster.is_deleted == False
-                ).first()
+            # Parse timestamp
+            ist_ts = datetime.fromisoformat(strike_ltp_data.timestamp)
+            if ist_ts.tzinfo is None:
+                ist_ts = ist_ts.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
+            else:
+                ist_ts = ist_ts.astimezone(ZoneInfo("Asia/Kolkata"))
 
-            print('check 1',symbol_master_id.id)
             db_strike_ltp = StrikePriceTickData(
-                symbol_master_id=symbol_master_id.id,
+                token=strike_ltp_data.token,
+                symbol=strike_ltp_data.symbol,
                 ltp=strike_ltp_data.ltp,
-                created_at=strike_ltp_data.timestamp,
-                strike_price=strike_ltp_data.strike_price,
+                created_at=ist_ts
             )
             
             db.add(db_strike_ltp)
@@ -219,14 +207,14 @@ class TickLTPService:
     def format_strike_ltp_response(db_strike_ltp: StrikePriceTickData) -> Dict[str, Any]:
         """
         Format strike price LTP data for API response
-        
-        Args:
-            db_strike_ltp: StrikePriceTickData object
-            
-        Returns:
-            Formatted dictionary for API response
         """
-        return None
+        return {
+            "id": db_strike_ltp.id,
+            "token": db_strike_ltp.token,
+            "symbol": db_strike_ltp.symbol,
+            "ltp": float(db_strike_ltp.ltp),
+            "created_at": db_strike_ltp.created_at.isoformat() if db_strike_ltp.created_at else None
+        }
 
     
     @staticmethod

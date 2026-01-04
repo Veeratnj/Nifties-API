@@ -380,40 +380,35 @@ async def send_exit_signal_v3(
 @router.post("/strike-ltp", response_model=SignalResponse, status_code=status.HTTP_200_OK)
 async def insert_strike_ltp(
     ltp_data: LTPInsertRequest,
-    request: Request
+    db: Session = Depends(get_db)
 ):
     """
-    **Manual LTP Insertion** - Stores LTP value in application state.
+    **Manual LTP Insertion** - Persists LTP value in database.
     
-    This endpoint allows manual insertion of LTP values into the application's
-    global state `app.state.ltp`. This is useful for testing or for symbols
-    not covered by the automated WebSocket.
-    
-    **Request Body Example:**
-    ```json
-    {
-        "token": "59200",
-        "price": 289.04
-    }
-    ```
+    This endpoint allows manual insertion of LTP values into the `strike_price_tick_data` table.
+    The system then uses this data for PnL calculations via DB joins.
     """
     try:
-        # Ensure LTP storage exists
-        if not hasattr(request.app.state, "ltp"):
-            request.app.state.ltp = {}
-            
-        # Store LTP in global state
-        token = ltp_data.token
-        price = ltp_data.price
+        # 1. Persist to Database
+        from app.services.tick_service import TickLTPService
+        from app.schemas.schema import StrikePriceLTPInsert
+        import datetime
         
-        request.app.state.ltp[token] = price
-        
-        logger.info(f"Manual LTP insertion for token {token}: {price}")
+        # Prepare data for service
+        db_insert_data = StrikePriceLTPInsert(
+            token=ltp_data.token,
+            symbol=ltp_data.symbol,
+            ltp=ltp_data.ltp,
+            timestamp=datetime.datetime.now().isoformat()
+        )
+        TickLTPService.insert_strike_ltp(db, db_insert_data)
+
+        logger.info(f"Manual LTP insertion for token {ltp_data.token}: {ltp_data.ltp}")
         
         return SignalResponse(
             success=True,
-            message=f"LTP for token {token} stored successfully",
-            data={"token": token, "price": price}
+            message="LTP stored and persisted successfully",
+            data={"token": ltp_data.token, "ltp": float(ltp_data.ltp), "symbol": ltp_data.symbol}
         )
         
     except Exception as e:

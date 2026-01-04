@@ -72,7 +72,8 @@ async def insert_strike_price_ltp(
     **Request Body Example:**
     ```json
     {
-        "strike_price_token": 'token',
+        "token": "59200",
+        "symbol": "NIFTY23DEC18500CE",
         "ltp": 125.50,
         "timestamp": "2025-11-25T14:30:45"
     }

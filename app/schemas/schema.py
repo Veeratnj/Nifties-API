@@ -501,9 +501,9 @@ class TickDataInsert(BaseModel):
     ltp:Decimal
 
 class StrikePriceLTPInsert(BaseModel):
-    strike_price_token: str
-    strike_price:int
-    ltp:Decimal
+    token: str
+    symbol: str
+    ltp: Decimal
     timestamp: str
 
 
