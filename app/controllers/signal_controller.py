@@ -389,17 +389,25 @@ async def insert_strike_ltp(
     The system then uses this data for PnL calculations via DB joins.
     """
     try:
+        print('ltp_data',ltp_data,'qwe123')
         # 1. Persist to Database
         from app.services.tick_service import TickLTPService
-        from app.schemas.schema import StrikePriceLTPInsert
+        # from app.schemas.schema import StrikePriceLTPInsert
         import datetime
+        from app.models import StrikePriceTickData
         
-        # Prepare data for service
-        db_insert_data = StrikePriceLTPInsert(
+        # # Prepare data for service
+        # db_insert_data = StrikePriceLTPInsert(
+        #     token=ltp_data.token,
+        #     symbol=ltp_data.symbol,
+        #     ltp=ltp_data.ltp,
+        #     timestamp=datetime.datetime.now().isoformat()
+        # )
+        db_insert_data = StrikePriceTickData(
             token=ltp_data.token,
             symbol=ltp_data.symbol,
             ltp=ltp_data.ltp,
-            timestamp=datetime.datetime.now().isoformat()
+            created_at=datetime.datetime.now().isoformat()
         )
         db.add(db_insert_data)
         db.commit()
@@ -414,7 +422,8 @@ async def insert_strike_ltp(
         )
         
     except Exception as e:
-        logger.error(f"Failed to insert manual LTP: {str(e)}")
+        # logger.error(f"Failed to insert manual LTP: {str(e)}")
+        print('Exception',e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to store LTP: {str(e)}"

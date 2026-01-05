@@ -13,6 +13,7 @@ from app.models.models import (
     Analytics,
     MarketIndex,
     PnLSnapshot,
+    StrikePriceTickData
 )
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     "Analytics",
     "MarketIndex",
     "PnLSnapshot",
+    "StrikePriceTickData",
 ]
