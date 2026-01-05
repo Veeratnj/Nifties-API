@@ -204,15 +204,15 @@ async def start_ltp(token: str, app=Depends(lambda: app)):
     Start LTP WebSocket for a token in background
     """
     # Run in a separate thread to avoid blocking FastAPI
-    asyncio.create_task(
-        asyncio.to_thread(
-            start_ltp_websocket,
-            dhan_context,  # your DhanContext object here
-            token,
-            app,
-            handle_ltp
-        )
-    )
+    # asyncio.create_task(
+    #     asyncio.to_thread(
+    #         start_ltp_websocket,
+    #         dhan_context,  # your DhanContext object here
+    #         token,
+    #         app,
+    #         handle_ltp
+    #     )
+    # )
     return {"status": "LTP WebSocket started", "token": token}
 
 @router.get("/ltp/{token}")

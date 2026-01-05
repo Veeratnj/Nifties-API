@@ -344,6 +344,7 @@ async def send_entry_signal_v3(
         #     logger.error(f"Failed to start LTP WebSocket: {str(e)}")    
 
         SignalService.process_entry_signal_v3(db=db, signal_data=signal_data,request=request)
+
         return SignalResponse(
             success=True,
             message="Entry signal v3 processed successfully",
@@ -428,3 +429,25 @@ async def insert_strike_ltp(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to store LTP: {str(e)}"
         )
+
+
+@router.post("/multiple-strike-price-entry", response_model=SignalResponse, status_code=status.HTTP_201_CREATED)
+async def multiple_strike_price_entry(
+    signal_data: list[LTPInsertRequest],
+    db: Session = Depends(get_db)
+                                    ):
+    try:
+        for ltp_data in signal_data:
+            await insert_strike_ltp(ltp_data=ltp_data, db=db)
+        return SignalResponse(
+            success=True,
+            message="Multiple strike price entry processed successfully",
+            data={}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process multiple strike price entry: {str(e)}"
+        )
+
+

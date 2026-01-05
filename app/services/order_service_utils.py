@@ -1,7 +1,7 @@
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from app.models.models import Order, User, DhanCredentials
+from app.models.models import Order, User, DhanCredentials , StrikePriceTickData
 from sqlalchemy.orm import Session
 from typing import List
 from dhanhq import dhanhq, DhanContext
@@ -32,18 +32,21 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
     transaction_list = ['buy_entry','sell_entry']
     if dhan_creds:
         # dhan_context=DhanContext(client_id=dhan_creds['client_id'], access_token=dhan_creds['access_token'])
-        dhan_context = DhanContext(client_id=dhan_creds.client_id, access_token=dhan_creds.access_token)
-        dhan = dhanhq(dhan_context)
-        dhan_res = dhan.place_order(
-        security_id=strike_data.token,
-        exchange_segment=dhan.NSE_FNO,
-        transaction_type=dhan.BUY if signal_data.signal.lower() in transaction_list else dhan.SELL,
-        quantity=35,
-        order_type=dhan.MARKET,
-        product_type=dhan.INTRA,
-        price=0,
-        )
-        print('Dhan Response:', dhan_res)
+        try:
+            dhan_context = DhanContext(client_id=dhan_creds.client_id, access_token=dhan_creds.access_token)
+            dhan = dhanhq(dhan_context)
+            dhan_res = dhan.place_order(
+            security_id=strike_data.token,
+            exchange_segment=dhan.NSE_FNO,
+            transaction_type=dhan.BUY if signal_data.signal.lower() in transaction_list else dhan.SELL,
+            quantity=30,
+            order_type=dhan.MARKET,
+            product_type=dhan.INTRA,
+            price=0,
+            )
+            print('Dhan Response:', dhan_res)
+        except Exception as e:
+            print('Dhan Error:', e)
         if signal_data.signal.lower() in transaction_list:
             db.add(
             Order(
@@ -51,7 +54,7 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
                 signal_log_id=signal_log_id,
                 symbol=strike_data.symbol,
                 option_type=strike_data.position,
-                qty=35,
+                qty=30,
                 entry_price=db.query(StrikePriceTickData.ltp).filter(StrikePriceTickData.symbol == strike_data.symbol).order_by(StrikePriceTickData.id.desc()).first()[0],
                 status="OPEN",
                 entry_time=datetime.now(ZoneInfo("Asia/Kolkata")),
