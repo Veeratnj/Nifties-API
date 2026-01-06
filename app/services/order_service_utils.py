@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from dhanhq import dhanhq, DhanContext
 from fastapi import Request
+import time
 
 def get_all_traders_id(db: Session) -> List[int]:
     return list(map(lambda x: x.id, db.query(User.id).filter(User.role == "TRADER").all()))
@@ -48,14 +49,23 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
         except Exception as e:
             print('Dhan Error:', e)
         if signal_data.signal.lower() in transaction_list:
+            with open('order_log.txt', 'a') as f:
+                f.write(f'trader_id: {trader_id}, signal_log_id: {signal_log_id}, symbol: {strike_data.symbol}, position: {strike_data.position}, lot_qty: {strike_data.lot_qty}\n')
+            time.sleep(5)   
             db.add(
             Order(
+                strategy_id=1,
                 user_id=trader_id,
                 signal_log_id=signal_log_id,
                 symbol=strike_data.symbol,
                 option_type=strike_data.position,
                 qty=strike_data.lot_qty,
-                entry_price=db.query(StrikePriceTickData.ltp).filter(StrikePriceTickData.symbol == strike_data.symbol).order_by(StrikePriceTickData.id.desc()).first()[0],
+                entry_price=(
+                    db.query(StrikePriceTickData.ltp)
+                    .filter(StrikePriceTickData.symbol == strike_data.symbol)
+                    .order_by(StrikePriceTickData.id.desc())
+                    .scalar()
+                ) or 0,
                 status="OPEN",
                 entry_time=datetime.now(ZoneInfo("Asia/Kolkata")),
                 is_deleted=False
@@ -68,7 +78,12 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
             if open_order:
                 #update the open order status to closed
                 open_order.status = "CLOSED"
-                open_order.exit_price = db.query(StrikePriceTickData.ltp).filter(StrikePriceTickData.symbol == strike_data.symbol).order_by(StrikePriceTickData.id.desc()).first()[0]
+                open_order.exit_price = (
+                        db.query(StrikePriceTickData.ltp)
+                        .filter(StrikePriceTickData.symbol == strike_data.symbol)
+                        .order_by(StrikePriceTickData.id.desc())
+                        .scalar()
+                    ) or 0,
                 open_order.exit_time = datetime.now(ZoneInfo("Asia/Kolkata"))
                 db.commit()
         

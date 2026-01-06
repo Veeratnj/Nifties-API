@@ -504,7 +504,7 @@ class StrikePriceLTPInsert(BaseModel):
     token: str
     symbol: str
     ltp: Decimal
-    timestamp: str
+    # timestamp: str
 
 
 class KillTradeSignalRequest(BaseModel):

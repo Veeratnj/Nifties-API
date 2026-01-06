@@ -16,6 +16,7 @@ class StrikeData(BaseModel):
     position: str = Field(..., description="Type of position (CE/PE)")
     symbol: str = Field(..., description="Trading symbol")
     lot_qty: int = Field(..., description="Lot quantity")
+    exchange: str = Field(..., description="Exchange identifier")
 
 
 class SignalBase(BaseModel):

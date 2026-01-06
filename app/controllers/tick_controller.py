@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Any, Optional
 from pydantic import BaseModel
-
+from app.models.models import StrikeInstrument
 from app.db.db import get_db
 # from app.schemas.tick_schema import  StrikePriceLTPInsert, OHLCDataInsert
 from app.schemas.schema import TickDataInsert,StrikePriceLTPInsert,OHLCDataInsert
@@ -32,7 +32,7 @@ async def insert_spot_ltp(
     {
         "token": "25",
         "timestamp": "2025-11-25T14:30:45",
-        "ltp": 18500.50,
+        "ltp": 18500.50
         
     }
     ```
@@ -74,8 +74,7 @@ async def insert_strike_price_ltp(
     {
         "token": "59200",
         "symbol": "NIFTY23DEC18500CE",
-        "ltp": 125.50,
-        "timestamp": "2025-11-25T14:30:45"
+        "ltp": 125.50
     }
     ```
     
@@ -150,4 +149,63 @@ async def insert_ohlc_data(
             detail=str(e)
         )
 
+
+
+
+from sqlalchemy import update
+from sqlalchemy import and_
+
+@router.get("/get-active-strike-instruments", response_model=ApiResponse)
+async def get_active_strike_instruments(db: Session = Depends(get_db)):
+
+    records = (
+        db.query(
+            StrikeInstrument.id,          # needed for update
+            StrikeInstrument.exchange,
+            StrikeInstrument.token,
+            StrikeInstrument.symbol
+        )
+        .filter(
+            StrikeInstrument.is_deleted.is_(False),
+            StrikeInstrument.is_started.is_(False)
+        )
+        .all()
+    )
+
+    if not records:
+        return ApiResponse(
+            success=True,
+            message="No active strike instruments available",
+            data=[]
+        )
+
+    # Mark as started
+    record_ids = [r.id for r in records]
+
+    (
+        db.query(StrikeInstrument)
+        .filter(StrikeInstrument.id.in_(record_ids))
+        .update(
+            {StrikeInstrument.is_started: True},
+            synchronize_session=False
+        )
+    )
+
+    db.commit()
+
+    # Send only required columns
+    data = [
+        {
+            "exchange": r.exchange,
+            "token": r.token,
+            "symbol": r.symbol
+        }
+        for r in records
+    ]
+
+    return ApiResponse(
+        success=True,
+        message="Strike instruments locked & retrieved successfully",
+        data=data
+    )
 

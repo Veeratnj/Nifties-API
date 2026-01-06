@@ -11,7 +11,7 @@ from fastapi import Request
 
 
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest
-from app.models.models import SignalLog, Order, Position , Trade , Strategy
+from app.models.models import SignalLog, Order, Position , Trade , Strategy ,StrikeInstrument
 from app.services.order_service_utils import get_all_traders_id,get_dhan_credentials,call_broker_dhan_api
 from app.services.broker_services import place_dhan_order_standalone
 
@@ -148,6 +148,14 @@ class SignalService:
         signal_log_id = signal_log.id if signal_log else None
         traders_ids = get_all_traders_id(db=db)
         print('check point 2')
+        db.add(StrikeInstrument(
+            token=signal_data.strike_data.token,
+            symbol=signal_data.strike_data.symbol,
+            exchange=signal_data.strike_data.exchange,
+            is_started=False,
+            is_deleted=False
+        ))
+        db.commit()
 
         for trader_id in traders_ids:
             threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data,db)).start()

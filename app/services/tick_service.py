@@ -126,8 +126,8 @@ class TickLTPService:
             # Lookup symbol
             symbol = db.query(SymbolMaster).filter(
                 SymbolMaster.token == tick_data.token,
-                SymbolMaster.is_active == True,
-                SymbolMaster.is_deleted == False
+                # SymbolMaster.is_active == True, # for inserting spot price for MCX proper clarifications  need 
+                # SymbolMaster.is_deleted == False
             ).first()
 
             if not symbol:
@@ -160,7 +160,8 @@ class TickLTPService:
         """
         try:
             # Parse timestamp
-            ist_ts = datetime.fromisoformat(strike_ltp_data.timestamp)
+            # ist_ts = datetime.fromisoformat(strike_ltp_data.timestamp)
+            ist_ts = datetime.now()
             if ist_ts.tzinfo is None:
                 ist_ts = ist_ts.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
             else:

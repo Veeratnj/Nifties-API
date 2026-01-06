@@ -1575,3 +1575,18 @@ class SignalLog(Base):
     def __repr__(self):
         return f"<SignalLog(id={self.id}, signal_type={self.signal_type}, unique_id={self.unique_id})>"
 
+
+
+class StrikeInstrument(Base):
+    """Strike Price LTP data associated with spot symbols"""
+    __tablename__ = 'strike_instruments'
+    id = Column(BigInteger, primary_key=True, index=True)
+    token = Column(String(50), nullable=False, index=True)
+    symbol = Column(String(100), nullable=False, index=True)
+    exchange = Column(String(20), nullable=False, index=True)
+    is_started = Column(Boolean, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    is_deleted = Column(Boolean, nullable=False, index=True)
+
+
+
