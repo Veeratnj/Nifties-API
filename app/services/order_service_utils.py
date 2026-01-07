@@ -52,6 +52,7 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
             with open('order_log.txt', 'a') as f:
                 f.write(f'trader_id: {trader_id}, signal_log_id: {signal_log_id}, symbol: {strike_data.symbol}, position: {strike_data.position}, lot_qty: {strike_data.lot_qty}\n')
             time.sleep(5)   
+            print('Adding order to db')
             db.add(
             Order(
                 strategy_id=1,
@@ -61,17 +62,20 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
                 option_type=strike_data.position,
                 qty=strike_data.lot_qty,
                 entry_price=(
-                    db.query(StrikePriceTickData.ltp)
-                    .filter(StrikePriceTickData.symbol == strike_data.symbol)
-                    .order_by(StrikePriceTickData.id.desc())
-                    .scalar()
-                ) or 0,
+                    (
+                        db.query(StrikePriceTickData.ltp)
+                        .filter(StrikePriceTickData.symbol == strike_data.symbol)
+                        .order_by(StrikePriceTickData.id.desc())
+                        .limit(1)
+                        .scalar()
+                    ) or 0),
                 status="OPEN",
                 entry_time=datetime.now(ZoneInfo("Asia/Kolkata")),
                 is_deleted=False
             )
-        )
+            )
             db.commit()
+            print('Order added to db')
         else:
             #get open order from orders table for the particular trader_id and signal_log_id
             open_order = db.query(Order).filter(Order.user_id == trader_id, Order.signal_log_id == signal_log_id, Order.status == "OPEN").first()
