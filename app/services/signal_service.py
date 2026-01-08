@@ -158,34 +158,9 @@ class SignalService:
         db.commit()
 
         for trader_id in traders_ids:
-            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data,db)).start()
+            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data,)).start()
         print('check point 3')
-            # dhan_creds=get_dhan_credentials(trader_id=trader_id)
-            # if dhan_creds:
-            #     DhanContext(client_id=dhan_creds['client_id'], access_token=dhan_creds['access_token'])
-            #     dhan = dhanhq(dhan_context)
-            #     dhan_res = dhan.place_order(
-            #     security_id=signal_data.token,
-            #     exchange_segment=dhan.NSE_FNO,
-            #     transaction_type=dhan.BUY if signal_data.signal.lower() == 'buy_entry' else dhan.SELL,
-            #     quantity=35,
-            #     order_type=dhan.MARKET,
-            #     product_type=dhan.INTRA,
-            #     price=0,
-            #     )
-            #     db.add(
-            #         Order(
-            #             user_id=trader_id,
-            #             signal_log_id=signal_log_id,
-            #             symbol=signal_data.strike_data.token,
-            #             option_type="CE",
-            #             qty=35,
-            #             entry_price=0,
-            #             status="OPEN",
-            #             entry_time=datetime.now(ZoneInfo("Asia/Kolkata")),
-            #             is_deleted=False
-            #         )
-            #     )
+            
                 
 
     @staticmethod
@@ -209,7 +184,7 @@ class SignalService:
         print('exit check point 3',traders_ids)
 
         for trader_id in traders_ids:
-            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data,db)).start()
+            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data)).start()
 
 
             

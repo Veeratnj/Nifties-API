@@ -25,7 +25,9 @@ def get_dhan_credentials(trader_id: int, db: Session) -> dict[str, str]:
 
 
 
-def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Session):
+def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Session=None):
+    from app.db.db import SessionLocal
+    db = SessionLocal()
     print(f'Placing order for trader_id: {trader_id}, signal_log_id: {signal_log_id}')
     strike_data = signal_data.strike_data
     dhan_creds=get_dhan_credentials(trader_id=trader_id, db=db)
@@ -48,6 +50,7 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
             print('Dhan Response:', dhan_res)
         except Exception as e:
             print('Dhan Error:', e)
+        print('signal if ',signal_data.signal)
         if signal_data.signal.lower() in transaction_list:
             with open('order_log.txt', 'a') as f:
                 f.write(f'trader_id: {trader_id}, signal_log_id: {signal_log_id}, symbol: {strike_data.symbol}, position: {strike_data.position}, lot_qty: {strike_data.lot_qty}\n')
@@ -61,14 +64,14 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
                 symbol=strike_data.symbol,
                 option_type=strike_data.position,
                 qty=strike_data.lot_qty,
-                entry_price=(
+                entry_price=
                     (
                         db.query(StrikePriceTickData.ltp)
                         .filter(StrikePriceTickData.symbol == strike_data.symbol)
                         .order_by(StrikePriceTickData.id.desc())
                         .limit(1)
                         .scalar()
-                    ) or 0),
+                    ) or 0,
                 status="OPEN",
                 entry_time=datetime.now(ZoneInfo("Asia/Kolkata")),
                 is_deleted=False
@@ -79,17 +82,20 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
         else:
             #get open order from orders table for the particular trader_id and signal_log_id
             open_order = db.query(Order).filter(Order.user_id == trader_id, Order.signal_log_id == signal_log_id, Order.status == "OPEN").first()
+            print('order check point 1',open_order.user_id)
             if open_order:
-                #update the open order status to closed
                 open_order.status = "CLOSED"
+
                 open_order.exit_price = (
-                        db.query(StrikePriceTickData.ltp)
-                        .filter(StrikePriceTickData.symbol == strike_data.symbol)
-                        .order_by(StrikePriceTickData.id.desc())
-                        .scalar()
-                    ) or 0,
+                    db.query(StrikePriceTickData.ltp)
+                    .filter(StrikePriceTickData.symbol == strike_data.symbol)
+                    .order_by(StrikePriceTickData.id.desc())
+                    .scalar()
+                ) or 0
+
                 open_order.exit_time = datetime.now(ZoneInfo("Asia/Kolkata"))
                 db.commit()
+
         
 
 
