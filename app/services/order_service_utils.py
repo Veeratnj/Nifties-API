@@ -88,7 +88,7 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
                 open_order.exit_price = (
                     db.query(StrikePriceTickData.ltp)
                     .filter(StrikePriceTickData.symbol == strike_data.symbol)
-                    .order_by(StrikePriceTickData.id.desc())
+                    .order_by(StrikePriceTickData.id.desc()).limit(1)
                     .scalar()
                 ) or 0
 
