@@ -56,6 +56,12 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
                 f.write(f'trader_id: {trader_id}, signal_log_id: {signal_log_id}, symbol: {strike_data.symbol}, position: {strike_data.position}, lot_qty: {strike_data.lot_qty}\n')
             time.sleep(5)   
             print('Adding order to db')
+            ltp = (
+                db.query(StrikePriceTickData.ltp)
+                .filter(StrikePriceTickData.symbol == strike_data.symbol)
+                .order_by(StrikePriceTickData.id.desc()).limit(1)
+                .scalar()
+            )
             db.add(
             Order(
                 strategy_id=1,
@@ -64,14 +70,7 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
                 symbol=strike_data.symbol,
                 option_type=strike_data.position,
                 qty=strike_data.lot_qty,
-                entry_price=
-                    (
-                        db.query(StrikePriceTickData.ltp)
-                        .filter(StrikePriceTickData.symbol == strike_data.symbol)
-                        .order_by(StrikePriceTickData.id.desc())
-                        .limit(1)
-                        .scalar()
-                    ) or 0,
+                entry_price=float(ltp) if ltp is not None else 0.0,
                 status="OPEN",
                 entry_time=datetime.now(ZoneInfo("Asia/Kolkata")),
                 is_deleted=False
