@@ -26,6 +26,7 @@ class PositionService:
         """
         try:
             today = date.today()
+            print('test flag')
             
             # Subquery to get the latest LTP for each symbol
             latest_ltp_subquery = db.query(
@@ -68,6 +69,13 @@ class PositionService:
             
             results = query.all()
             logger.info(f"Retrieved {len(results)} open trades from orders table")
+
+            # strike_price = (db.query(
+            #     StrikePriceTickData.strike_price)
+            #     .filter(StrikePriceTickData.symbol == results[0].Order.symbol)
+            #     .order_by(StrikePriceTickData.id.desc())
+            #     .limit(1)
+            #     .scalar())
             
             # Transform to frontend format
             return [PositionService._transform_order_to_position(row.Order, row.current_ltp) for row in results]
@@ -104,15 +112,18 @@ class PositionService:
         pnl_percent = 0.0
         
         if current_price > 0 and entry_price > 0 and qty > 0:
-            if "BUY" in side.upper():
+            if True:
+            # if "BUY" in side.upper():
                 pnl = (current_price - entry_price) * qty
-            elif "SELL" in side.upper():
-                pnl = (entry_price - current_price) * qty
+            # elif "SELL" in side.upper():
+            #     pnl = (entry_price - current_price) * qty
             
             pnl_percent = (pnl / (entry_price * qty)) * 100 if entry_price > 0 else 0
         
         # Get strategy name
         strategy_name = order.strategy.name if order.strategy else None
+
+        
         
         return {
             "id": order.id,
