@@ -78,18 +78,32 @@ class PositionService:
             #     .scalar())
             
             # Transform to frontend format
-            return [PositionService._transform_order_to_position(row.Order, row.current_ltp) for row in results]
+            output= [PositionService._transform_order_to_position(row.Order, row.current_ltp,db) for row in results]
+            db.commit()
+            return output
         except Exception as e:
             logger.error(f"Error retrieving open trades: {str(e)}")
             raise
 
     @staticmethod
-    def _transform_order_to_position(order: Order, current_ltp: Optional[float] = None) -> dict:
+    def _transform_order_to_position(order: Order, current_ltp: Optional[float] = None,db: Session = None) -> dict:
         """Transform Order model to frontend expected format for positions with PnL calculation"""
         
         # P&L calculation
+        'if order entry price is then check in my strike_ltp and update order table as well'
         entry_price = float(order.entry_price or 0)
         qty = int(order.qty or 0)
+
+        'nearby  ltp after entry time '
+        if entry_price==0:
+            print('entry price is zero')
+            entry_price = db.query(StrikePriceTickData.ltp).filter(StrikePriceTickData.symbol == order.symbol, 
+                        StrikePriceTickData.created_at >= order.entry_time).order_by(StrikePriceTickData.created_at.asc()).limit(1).scalar()
+            print(entry_price)
+            order.entry_price = entry_price if entry_price else 0
+            db.add(order)
+            # db.commit()
+            db.flush()  
         
         # Determine side
         side = "BUY"
