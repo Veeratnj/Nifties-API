@@ -33,14 +33,21 @@ def call_broker_dhan_api(trader_id: int,signal_log_id: int, signal_data, db: Ses
     dhan_creds=get_dhan_credentials(trader_id=trader_id, db=db)
     print('Dhan Credentials:', dhan_creds.client_id,dhan_creds.access_token,dhan_creds.user_id)
     transaction_list = ['buy_entry','sell_entry']
+    
     if dhan_creds:
         # dhan_context=DhanContext(client_id=dhan_creds['client_id'], access_token=dhan_creds['access_token'])
         try:
             dhan_context = DhanContext(client_id=dhan_creds.client_id, access_token=dhan_creds.access_token)
+
             dhan = dhanhq(dhan_context)
+            exchange_segment = (
+                dhan.NSE_FNO if strike_data.exchange == 'NSE_FNO'
+                else dhan.BSE_FNO if strike_data.exchange == 'BSE_FNO'
+                else dhan.NSE_FNO
+            )
             dhan_res = dhan.place_order(
             security_id=strike_data.token,
-            exchange_segment=dhan.NSE_FNO,
+            exchange_segment=exchange_segment,
             transaction_type=dhan.BUY if signal_data.signal.lower() in transaction_list else dhan.SELL,
             quantity=strike_data.lot_qty,
             order_type=dhan.MARKET,
