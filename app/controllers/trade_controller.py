@@ -43,7 +43,7 @@ async def get_trades(
         logger.error(f"Error getting trades: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error retrieving trades"
+            detail="Error retrieving trades " + str(e)
         )
 
 

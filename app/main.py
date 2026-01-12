@@ -7,7 +7,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.models.models import Base
 from app.db.db import engine
 from app.middleware.middleware import TimerMiddleware, LoggingMiddleware, AuthMiddleware, ErrorHandlingMiddleware
@@ -30,21 +29,17 @@ from app.controllers import (
     signal_controller,
 )
 
-# Configure logging with rotating file handler (1MB max size)
-rotating_handler = RotatingFileHandler(
-    "logs/app.log",
-    maxBytes=1024 * 1024,  # 1MB
-    backupCount=3  # Keep 3 backup files
-)
-rotating_handler.setFormatter(
-    logging.Formatter("[%(asctime)s] - %(name)s - %(levelname)s - %(message)s")
-)
+
+
+root_logger = logging.getLogger()
+root_logger.handlers.clear()
+root_logger.setLevel(logging.WARNING)
 
 logging.basicConfig(
-    level=logging.ERROR,
+    level=logging.WARNING,  # WARNING, ERROR, CRITICAL only
     format="[%(asctime)s] - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        rotating_handler,
+        logging.FileHandler("logs/app.log", encoding="utf-8"),
         logging.StreamHandler()
     ]
 )

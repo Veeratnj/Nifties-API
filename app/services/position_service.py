@@ -100,9 +100,9 @@ class PositionService:
             entry_price = db.query(StrikePriceTickData.ltp).filter(StrikePriceTickData.symbol == order.symbol, 
                         StrikePriceTickData.created_at >= order.entry_time).order_by(StrikePriceTickData.created_at.asc()).limit(1).scalar()
             print(entry_price)
-            order.entry_price = entry_price if entry_price else 0
+            
+            order.entry_price = float(entry_price or 0)
             db.add(order)
-            # db.commit()
             db.flush()  
         
         # Determine side
