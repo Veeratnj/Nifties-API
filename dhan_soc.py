@@ -13,6 +13,12 @@ ist = pytz.timezone("Asia/Kolkata")
 client_id = '1100465668' #raja sir id
 access_token ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzY4NDEwOTk3LCJpYXQiOjE3NjgzMjQ1OTcsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTAwNDY1NjY4In0.BsHHcZtaz63m0xwUqIInIkzmdxM_h_msLEKpzEpuqn8eNp5Boe1gHt6ifaCaR4k07kZ8wHI_54eYfB1J6gQg'
 
+# client_id = '1100449732' #divya sir id
+# access_token ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzY4NDEwNzU0LCJpYXQiOjE3NjgzMjQzNTQsInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTAwNDQ5NzMyIn0.95oswZQd6olqdEP1rUnAU6cnMXwF-qrmgAn9uLhacs-uyP9EVCDPS3Ah1E_DxyerAHC-zqO4Nl0bGkjjP6gQzQ'
+
+
+
+
 version = "v2"
 
 marketfeed_dict = {
@@ -43,7 +49,7 @@ def signal_handler(signum, frame):
 def get_new_strike_instruments():
     """Fetch active strike instruments from API"""
     try:
-        url = "http://localhost:8000/api/tick/get-active-strike-instruments"
+        url = "http://localhost:8001/api/tick/get-active-strike-instruments"
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
 
@@ -76,7 +82,7 @@ def get_new_strike_instruments():
 def insert_spot_ltp_api(token: str, ltp: float):
     """Insert LTP data via API"""
     try:
-        url = "http://localhost:8000/api/tick/insert-strike-ltp"
+        url = "http://localhost:8001/api/tick/insert-strike-ltp"
         payload = {
             "token": str(token),
             "ltp": float(ltp),
@@ -138,7 +144,7 @@ def main():
     
     # Start with default instruments
     instruments = [
-        (MarketFeed.MCX, '464925', MarketFeed.Ticker),
+        # (MarketFeed.MCX, '464925', MarketFeed.Ticker),
         (MarketFeed.IDX, "25", MarketFeed.Ticker),
     ]
     

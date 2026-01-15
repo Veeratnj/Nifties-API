@@ -128,7 +128,7 @@ class PositionService:
         if current_price > 0 and entry_price > 0 and qty > 0:
             if True:
             # if "BUY" in side.upper():
-                pnl = (current_price - entry_price) * qty
+                pnl = (float(current_price) - float(entry_price)) * qty
             # elif "SELL" in side.upper():
             #     pnl = (entry_price - current_price) * qty
             
