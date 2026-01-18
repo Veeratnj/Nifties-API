@@ -114,4 +114,4 @@ def import_trades(file, user_id=3, strategy_code="DAIKOKUTEN"):
         db.close()
 
 if __name__ == "__main__":
-    import_trades("30.12.25.csv")
+    import_trades("18JAN.csv")
