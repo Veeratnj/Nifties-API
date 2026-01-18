@@ -49,7 +49,7 @@ def signal_handler(signum, frame):
 def get_new_strike_instruments():
     """Fetch active strike instruments from API"""
     try:
-        url = "http://localhost:8001/api/tick/get-active-strike-instruments"
+        url = "http://localhost:8000/api/tick/get-active-strike-instruments"
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
 
