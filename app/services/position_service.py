@@ -144,7 +144,7 @@ class PositionService:
             "user_id": order.user_id,
             "symbol": order.symbol,
             "index": 'NSE' if 'nifty' in order.symbol.lower() else 'BSE' if 'sensex' in order.symbol.lower() else  'MCX', 
-            "strike": order.symbol.split("-")[1], 
+            "strike": order.symbol.split("-")[-2], 
             "type": order.option_type,
             "qty": qty,
             "entry_price": entry_price,
