@@ -132,7 +132,7 @@ class PositionService:
             # elif "SELL" in side.upper():
             #     pnl = (entry_price - current_price) * qty
             
-            pnl_percent = (pnl / (entry_price * qty)) * 100 if entry_price > 0 else 0
+            pnl_percent = (float(pnl) / (float(entry_price) * int(qty))) * 100 if entry_price > 0 else 0
         
         # Get strategy name
         strategy_name = order.strategy.name if order.strategy else None
