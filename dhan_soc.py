@@ -82,7 +82,7 @@ def get_new_strike_instruments():
 def insert_spot_ltp_api(token: str, ltp: float):
     """Insert LTP data via API"""
     try:
-        url = "http://localhost:8001/api/tick/insert-strike-ltp"
+        url = "http://localhost:8000/api/tick/insert-strike-ltp"
         payload = {
             "token": str(token),
             "ltp": float(ltp),
