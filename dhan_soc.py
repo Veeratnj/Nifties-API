@@ -10,11 +10,18 @@ import signal
 
 ist = pytz.timezone("Asia/Kolkata")
 
-client_id = '1100465668' #raja sir id
-access_token ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzY5MDk0MDE5LCJpYXQiOjE3NjkwMDc2MTksInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTAwNDY1NjY4In0.LEU9prj65uSzgGdchNkvI5lNRvmrdh8Q1JjCNnvN8dMNhDGfwL9mKSfXfonpTxnqlsL37jZPdqLX5513jE9U6A'
-
-# client_id = '1100449732' #divya sir id
-# access_token ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzY5MDkzODk5LCJpYXQiOjE3NjkwMDc0OTksInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTAwNDQ5NzMyIn0.AgTQHkEs4KoY8kCsNjgMUgHhloDgxTnt6usXdwnYHtnlR_evwngRrxZeehnIyS4vMUol-hLJRPz7XfL9ztjeXw'
+# List of credentials for rotation
+CREDENTIALS = [
+    {
+        'client_id': '1100465668', # raja sir id
+        'access_token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzY5MDk0MDE5LCJpYXQiOjE3NjkwMDc2MTksInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTAwNDY1NjY4In0.LEU9prj65uSzgGdchNkvI5lNRvmrdh8Q1JjCNnvN8dMNhDGfwL9mKSfXfonpTxnqlsL37jZPdqLX5513jE9U6A'
+    },
+    {
+        'client_id': '1100449732', # divya sir id
+        'access_token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzY5MDkzODk5LCJpYXQiOjE3NjkwMDc0OTksInRva2VuQ29uc3VtZXJUeXBlIjoiU0VMRiIsIndlYmhvb2tVcmwiOiIiLCJkaGFuQ2xpZW50SWQiOiIxMTAwNDQ5NzMyIn0.AgTQHkEs4KoY8kCsNjgMUgHhloDgxTnt6usXdwnYHtnlR_evwngRrxZeehnIyS4vMUol-hLJRPz7XfL9ztjeXw'
+    }
+]
+current_cred_index = 0
 
 
 
@@ -103,12 +110,15 @@ def insert_spot_ltp_api(token: str, ltp: float):
 
 # ================== WS HELPERS ==================
 
-def start_ws(instruments):
-    """Start WebSocket connection"""
+def start_ws(instruments, cred_index=0):
+    """Start WebSocket connection with specific credentials"""
+    cred = CREDENTIALS[cred_index]
+    client_id = cred['client_id']
+    access_token = cred['access_token']
+    
     ctx = DhanContext(client_id, access_token)
     ws = MarketFeed(ctx, instruments, version)
-    print(f"✅ WS started with {len(instruments)} instruments")
-    print(f"✅ WS started with {instruments}")
+    print(f"✅ WS started with Client ID: {client_id} and {len(instruments)} instruments")
     
     # Log what we're subscribing to
     if instruments:
@@ -133,7 +143,7 @@ def stop_ws(ws):
 # ================== MAIN LOOP ==================
 
 def main():
-    global shutdown_flag
+    global shutdown_flag, current_cred_index
     
     # Register signal handler
     signal.signal(signal.SIGINT, signal_handler)
@@ -144,15 +154,10 @@ def main():
     
     # Start with default instruments
     instruments = [
-        # (MarketFeed.MCX, '464925', MarketFeed.Ticker),
         (MarketFeed.IDX, "25", MarketFeed.Ticker),
     ]
     
-    # Initialize symbol mapper for defaults
-    # global_secid_symbol_mapper_dict['464925'] = 'CRUDEOIL-TEST'
-    # global_secid_symbol_mapper_dict['25'] = 'BANKNIFTY-TEST'
-    
-    ws = start_ws(instruments)
+    ws = start_ws(instruments, current_cred_index)
     known_tokens = {i[1] for i in instruments}
     
     last_reload_check = 0
@@ -160,18 +165,17 @@ def main():
     tick_count = 0
     last_tick_time = time.time()
     
-    try:
-        while not shutdown_flag:
+    while not shutdown_flag:
+        try:
             now_ist = datetime.now(ist)
             
             # Market hours check - extended for MCX
             start_time = now_ist.replace(hour=9, minute=0, second=0, microsecond=0)
-            end_time = now_ist.replace(hour=23, minute=0, second=0, microsecond=0)
+            end_time = now_ist.replace(hour=23, minute=30, second=0, microsecond=0)
             
             # Skip if outside market hours
             if not (start_time <= now_ist <= end_time):
-                # If market closed and it's after 11 PM, wait longer
-                if now_ist.hour >= 23:
+                if now_ist.hour >= 23 and now_ist.minute >= 30:
                     print(f"⏰ {now_ist.strftime('%H:%M:%S')} - Market closed until 9 AM")
                     time.sleep(60)
                 else:
@@ -187,10 +191,6 @@ def main():
                 # Check if we have NEW tokens (not subset of known tokens)
                 if new_tokens and not new_tokens.issubset(known_tokens):
                     print(f"\n♻ New instruments detected → Restarting WS")
-                    print(f"   Old: {len(known_tokens)} instruments")
-                    print(f"   New: {len(new_tokens)} instruments")
-                    
-                    # Add new tokens to known set
                     known_tokens.update(new_tokens)
                     
                     # Combine old and new instruments, remove duplicates
@@ -198,19 +198,16 @@ def main():
                     unique_instruments = []
                     seen = set()
                     for inst in all_instruments:
-                        key = (inst[0], inst[1])  # (exchange, token)
+                        key = (inst[0], inst[1])
                         if key not in seen:
                             seen.add(key)
                             unique_instruments.append(inst)
                     
-                    # Update instruments list
                     instruments = unique_instruments
-                    
-                    # Restart WebSocket
                     stop_ws(ws)
-                    time.sleep(1)  # Brief pause
-                    ws = start_ws(instruments)
-                    tick_count = 0  # Reset tick counter
+                    time.sleep(1)
+                    ws = start_ws(instruments, current_cred_index)
+                    tick_count = 0
                 
                 last_reload_check = current_time
             
@@ -222,12 +219,15 @@ def main():
                 tick_count += 1
                 last_tick_time = current_time
                 
-                # Print progress every 100 ticks
                 if tick_count % 100 == 0:
                     now_time = datetime.now(ist).strftime("%H:%M:%S")
                     print(f"📈 [{now_time}] Processed {tick_count} ticks")
             
             if not response or 'LTP' not in response or 'security_id' not in response:
+                # Check for connection timeout (no ticks for 60 seconds)
+                if current_time - last_tick_time > 60:
+                    print("⚠️ No ticks received for 60 seconds - forcing refresh...")
+                    raise Exception("Connection timeout - no ticks received")
                 continue
 
             # Process the tick
@@ -238,19 +238,36 @@ def main():
                 )
             except Exception as e:
                 print(f"Insert error: {e}")
-            
-            # Check for connection timeout (no ticks for 30 seconds)
-            if current_time - last_tick_time > 30:
-                print("⚠️ No ticks received for 30 seconds - forcing refresh...")
-                last_reload_check = 0  # Force check on next iteration
 
-    except KeyboardInterrupt:
-        print("\n🛑 Keyboard Interrupt")
-    except Exception as e:
-        print(f"❌ Unexpected error: {e}")
-    finally:
+        except KeyboardInterrupt:
+            print("\n🛑 Keyboard Interrupt")
+            shutdown_flag = True
+        except Exception as e:
+            print(f"❌ Error encountered: {e}")
+            print("🔄 Switching credentials and restarting WS...")
+            
+            # Rotate credentials
+            current_cred_index = (current_cred_index + 1) % len(CREDENTIALS)
+            
+            try:
+                stop_ws(ws)
+            except:
+                pass
+                
+            time.sleep(5)  # Wait before retry
+            try:
+                ws = start_ws(instruments, current_cred_index)
+                last_tick_time = time.time() # Reset timeout
+            except Exception as start_err:
+                print(f"❌ Failed to restart WS: {start_err}")
+                time.sleep(10)
+
+    # Cleanup
+    try:
         stop_ws(ws)
-        print("\n✅ Program ended gracefully")
+    except:
+        pass
+    print("\n✅ Program ended gracefully")
 
 
 if __name__ == "__main__":
