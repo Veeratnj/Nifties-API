@@ -162,3 +162,11 @@ async def kill_trade_v1(unique_id:str,db: Session = Depends(get_db)):
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
+
+
+@router.put("/update-stop-loss-target/v1", status_code=status.HTTP_201_CREATED)
+async def update_stop_loss_target_v1(unique_id:str,stop_loss:float,target:float,db: Session = Depends(get_db)):
+  try:
+    return AdminService.update_stop_loss_target_v1(unique_id=unique_id,stop_loss=stop_loss,target=target,db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

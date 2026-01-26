@@ -126,6 +126,15 @@ class AdminService:
         for trader_id in user_ids:
             threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data)).start()
 
+    @staticmethod
+    def update_stop_loss_target_v1(unique_id:str,stop_loss:float,target:float,db:Session):
+        signal_log = db.query(SignalLog).filter(SignalLog.signal_category == "ENTRY",SignalLog.unique_id == unique_id).order_by(SignalLog.id.desc()).first()
+        signal_log.stop_loss = stop_loss
+        signal_log.target = target
+        db.commit()
+        return True
+
+
 
 
     @staticmethod
