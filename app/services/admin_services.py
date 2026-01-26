@@ -2,7 +2,7 @@
 
 
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest ,StrikeData
-from app.models.models import SignalLog, StrikeInstrument, Strategy 
+from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData
 import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
