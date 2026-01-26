@@ -273,7 +273,7 @@ class AdminService:
                 current_price = (
                     db.query(StrikePriceTickData.ltp)
                     .filter(
-                        StrikePriceTickData.token == token,
+                        StrikePriceTickData.token == payload["strike_data"]["token"],
                         StrikePriceTickData.is_deleted == False
                     )
                     .scalar()
