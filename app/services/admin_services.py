@@ -131,6 +131,8 @@ class AdminService:
         signal_log = db.query(SignalLog).filter(SignalLog.signal_category == "ENTRY",SignalLog.unique_id == unique_id).order_by(SignalLog.id.desc()).first()
         signal_log.stop_loss = stop_loss
         signal_log.target = target
+        signal_log.payload["stop_loss"] = stop_loss
+        signal_log.payload["target"] = target
         db.commit()
         return True
 
