@@ -145,13 +145,27 @@ class AdminService:
         today = date.today()
         tomorrow = today + timedelta(days=1)
 
+        subq = (
+            db.query(
+                SignalLog.unique_id,
+                func.count(SignalLog.unique_id).label("signal_count")
+            )
+            .filter(
+                SignalLog.timestamp >= today,
+                SignalLog.timestamp < tomorrow
+            )
+            .group_by(SignalLog.unique_id)
+            .subquery()
+        )
+
         rows = (
             db.query(
                 SignalLog.payload,
                 SignalLog.stop_loss,
                 SignalLog.target,
-                func.count(SignalLog.unique_id).label("signal_count"),
+                subq.c.signal_count
             )
+            .join(subq, SignalLog.unique_id == subq.c.unique_id)
             .filter(
                 SignalLog.timestamp >= today,
                 SignalLog.timestamp < tomorrow
@@ -160,20 +174,16 @@ class AdminService:
             .all()
         )
 
-        results = []
-
-        for payload, stop_loss, target,signal_count in rows:
-            # always work on a copy
-            data = dict(payload) if payload else {}
-
-            data["stop_loss"] = stop_loss
-            data["target"] = target
-            data['signal_count'] = signal_count
-            data['status'] = "OPEN" if signal_count ==1 else "CLOSED"
-
-            results.append(data)
-
-        return results
+        return [
+            {
+                **(payload or {}),
+                "stop_loss": stop_loss,
+                "target": target,
+                "signal_count": signal_count,
+                "status": "OPEN" if signal_count == 1 else "CLOSED",
+            }
+            for payload, stop_loss, target, signal_count in rows
+        ]
 
 
     @staticmethod
