@@ -263,21 +263,27 @@ class AdminService:
                 )
                 .scalar()
             )
+            print(exit_price)
+            print(payload['strike_data'])
 
             # -----------------------------
             # Current price
             # -----------------------------
-            if exit_price is not None:
+            if exit_price is not None and exit_price != 0:
                 current_price = exit_price
+                print('123')
             else:
                 current_price = (
                     db.query(StrikePriceTickData.ltp)
                     .filter(
                         StrikePriceTickData.token == payload["strike_data"]["token"],
-                        StrikePriceTickData.is_deleted == False
                     )
+                    .order_by(StrikePriceTickData.id.desc())  # latest row first
+                    .limit(1)                               # only 1 row
                     .scalar()
                 )
+
+                print(payload["strike_data"]["token"])
 
             # -----------------------------
             # Final response object
