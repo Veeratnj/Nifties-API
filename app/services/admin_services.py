@@ -131,8 +131,8 @@ class AdminService:
         signal_log = db.query(SignalLog).filter(SignalLog.signal_category == "ENTRY",SignalLog.unique_id == unique_id).order_by(SignalLog.id.desc()).first()
         signal_log.stop_loss = stop_loss
         signal_log.target = target
-        signal_log.payload["stop_loss"] = stop_loss
-        signal_log.payload["target"] = target
+        # signal_log.payload["stop_loss"] = stop_loss
+        # signal_log.payload["target"] = target
         db.commit()
         return True
 
@@ -144,15 +144,32 @@ class AdminService:
         today = date.today()
         tomorrow = today + timedelta(days=1)
 
-        result = (
-            db.query(SignalLog.payload)
+        rows = (
+            db.query(
+                SignalLog.payload,
+                SignalLog.stop_loss,
+                SignalLog.target
+            )
             .filter(
                 SignalLog.timestamp >= today,
                 SignalLog.timestamp < tomorrow
             )
             .order_by(SignalLog.id.desc())
+            .all()
         )
-        return [row.payload for row in result.all()]
+
+        results = []
+
+        for payload, stop_loss, target in rows:
+            # always work on a copy
+            data = dict(payload) if payload else {}
+
+            data["stop_loss"] = stop_loss
+            data["target"] = target
+
+            results.append(data)
+
+        return results
 
 
     @staticmethod
