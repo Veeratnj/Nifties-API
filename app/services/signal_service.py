@@ -139,7 +139,11 @@ class SignalService:
             strike_price_token=signal_data.strike_data.token,
             strategy_code=signal_data.strategy_code,
             signal_category="ENTRY",
-            timestamp=datetime.now(ZoneInfo("Asia/Kolkata"))
+            timestamp=datetime.now(ZoneInfo("Asia/Kolkata")),
+            payload=signal_data.model_dump(mode="json"),
+            stop_loss=signal_data.stop_loss,
+            target=signal_data.target,
+            description=signal_data.description
         ))
         db.commit()
         print('check point 1')
@@ -174,7 +178,11 @@ class SignalService:
             strike_price_token=signal_data.strike_data.token,
             strategy_code=signal_data.strategy_code,
             signal_category="EXIT",
-            timestamp=datetime.now(ZoneInfo("Asia/Kolkata"))
+            timestamp=datetime.now(ZoneInfo("Asia/Kolkata")),
+            payload=signal_data.model_dump(mode="json"),
+            stop_loss=0.0,
+            target=0.0,
+            description=signal_data.description
         ))
         db.commit()
         print('exit check point 1')

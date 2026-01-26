@@ -2,15 +2,15 @@
 
 
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest
-from app.models.models import SignalLog, StrikeInstrument, Strategy
-from app.utils.security import get_all_traders_id
-from app.utils.broker_dhan_api import call_broker_dhan_api
+from app.models.models import SignalLog, StrikeInstrument, Strategy 
 import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
-from app.services.order_service_utils import get_all_traders_id,call_broker_dhan_api
-
+from app.services.order_service_utils import get_all_traders_id
+from datetime import date, timedelta
+from app.services.signal_service import SignalService
+from typing import List
 
 class AdminService:
     
@@ -128,8 +128,26 @@ class AdminService:
 
 
 
+    @staticmethod
+    def show_all_today_live_trades_v1(db: Session):
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+
+        result = (
+            db.query(SignalLog.payload)
+            .filter(
+                SignalLog.timestamp >= today,
+                SignalLog.timestamp < tomorrow
+            )
+            .order_by(SignalLog.id.desc())
+        )
+        return [row.payload for row in result.all()]
 
 
+    @staticmethod
+    def kill_trade_v1(Payload:SignalExitRequest,db:Session):
+        SignalService.process_exit_signal_v3(signal_data=Payload,db=db)
+        return True
 
 
 

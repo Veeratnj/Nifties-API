@@ -11,7 +11,6 @@ from app.db.db import get_db
 from app.models.models import User
 from app.utils.security import get_current_user
 from app.services.admin_services import AdminService
-from app.schemas.schema import SignalResponse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,10 +18,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
-@router.post("/create-live-trade-for-all-users/v1",response_model=SignalResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/create-live-trade-for-all-users/v1", status_code=status.HTTP_201_CREATED)
 async def create_live_trade_for_all_users_v1(
     signal_data: AdminSignalEntryRequest,
-    request: Request,
     db: Session = Depends(get_db)):
     '''
     Create live trade for all users
@@ -52,10 +50,9 @@ async def create_live_trade_for_all_users_v1(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.post("/create-live-trade-for-user/v1",response_model=SignalResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/create-live-trade-for-user/v1", status_code=status.HTTP_201_CREATED)
 async def create_live_trade_for_user_v1(
     signal_data: AdminSignalEntryRequest,
-    request: Request,
     db: Session = Depends(get_db)):
     '''
     Create live trade for user
@@ -85,7 +82,7 @@ async def create_live_trade_for_user_v1(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.post("/close-live-trade-for-all-users/v1",response_model=SignalResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/close-live-trade-for-all-users/v1", status_code=status.HTTP_201_CREATED)
 async def close_live_trade_for_all_users_v1(
     signal_data: AdminSignalExitRequest,
     db: Session = Depends(get_db)):
@@ -117,7 +114,7 @@ async def close_live_trade_for_all_users_v1(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.post("/close-live-trade-for-user/v1",response_model=SignalResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/close-live-trade-for-user/v1", status_code=status.HTTP_201_CREATED)
 async def close_live_trade_for_user_v1(
     signal_data: AdminSignalExitRequest,
     db: Session = Depends(get_db)):
@@ -145,3 +142,23 @@ async def close_live_trade_for_user_v1(
         AdminService.close_live_trade_for_user_v1(db=db)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+@router.get("/show-all-live-trades/v1", status_code=status.HTTP_200_OK)
+async def show_all_live_trades_v1(db: Session = Depends(get_db)):
+  try:
+    return AdminService.show_all_today_live_trades_v1(db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+@router.put("/kill-trade/v1", status_code=status.HTTP_201_CREATED)
+async def kill_trade_v1(unique_id:str,db: Session = Depends(get_db)):
+  try:
+    return AdminService.kill_trade_v1(unique_id=unique_id,db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+

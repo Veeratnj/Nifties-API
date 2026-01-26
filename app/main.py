@@ -27,6 +27,7 @@ from app.controllers import (
     alert_controller,
     tick_controller,
     signal_controller,
+    admin_controllers
 )
 
 
@@ -108,6 +109,7 @@ def create_app():
     app.include_router(alert_controller.router)
     app.include_router(tick_controller.router)
     app.include_router(signal_controller.router)
+    app.include_router(admin_controllers.router)
     
     logger.info("All routers registered successfully")
     logger.info(f"API started on version {API_VERSION}")

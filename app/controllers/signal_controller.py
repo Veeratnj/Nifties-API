@@ -451,3 +451,21 @@ async def multiple_strike_price_entry(
         )
 
 
+@router.get("/{unique_id}")
+async def get_stop_loss_target(unique_id: str, db: Session = Depends(get_db)):
+    try:
+        signal = db.query(SignalLog).filter(SignalLog.unique_id == unique_id).first()
+        if not signal:
+            return {
+                "stop_loss": None,
+                "target": None,
+            }
+        return {
+            "stop_loss": signal.stop_loss,
+            "target": signal.target,
+                # "description": signal.description
+            }
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+

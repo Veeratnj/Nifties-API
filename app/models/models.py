@@ -14,6 +14,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 from sqlalchemy.sql import func
 import enum
+from sqlalchemy.dialects.postgresql import JSONB
+
 
 Base = declarative_base()
 
@@ -1563,6 +1565,11 @@ class SignalLog(Base):
     # Timestamp
     timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    #new  column should be added to store the payload
+    payload = Column(JSONB, nullable=True)
+    stop_loss = Column(Numeric(10, 2), nullable=True)
+    target = Column(Numeric(10, 2), nullable=True)
+    description = Column(String(255), nullable=True,default="qwerty")
     
     # Indexes
     __table_args__ = (

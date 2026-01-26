@@ -25,6 +25,9 @@ class SignalBase(BaseModel):
     signal: str = Field(..., description="Signal type (e.g., 'BUY_ENTRY', 'SELL_ENTRY', 'BUY_EXIT', 'SELL_EXIT')")
     unique_id: str = Field(..., description="Unique ID for this signal")
     strategy_code: str = Field(..., description="Code of the strategy")
+    stop_loss: float = Field(..., description="Stop loss value")
+    target: float = Field(..., description="Target value")
+    description: str = Field(..., description="Description of the signal")
     strike_data: StrikeData = Field(..., description="Nested strike data information")
 
 class SignalEntryRequest(SignalBase):
