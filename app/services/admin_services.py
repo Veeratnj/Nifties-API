@@ -7,6 +7,7 @@ import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.services.order_service_utils import get_all_traders_id
 from datetime import date, timedelta
 from app.services.signal_service import SignalService
@@ -148,7 +149,8 @@ class AdminService:
             db.query(
                 SignalLog.payload,
                 SignalLog.stop_loss,
-                SignalLog.target
+                SignalLog.target,
+                func.count(SignalLog.unique_id).label("signal_count"),
             )
             .filter(
                 SignalLog.timestamp >= today,
@@ -160,12 +162,14 @@ class AdminService:
 
         results = []
 
-        for payload, stop_loss, target in rows:
+        for payload, stop_loss, target,signal_count in rows:
             # always work on a copy
             data = dict(payload) if payload else {}
 
             data["stop_loss"] = stop_loss
             data["target"] = target
+            data['signal_count'] = signal_count
+            data['status'] = "OPEN" if signal_count ==1 else "CLOSED"
 
             results.append(data)
 
@@ -173,7 +177,36 @@ class AdminService:
 
 
     @staticmethod
-    def kill_trade_v1(Payload:SignalExitRequest,db:Session):
+    def kill_trade_v1(unique_id:str,db:Session):
+        signal_log = db.query(SignalLog.payload).filter(SignalLog.unique_id == unique_id).order_by(SignalLog.id.desc()).first()
+    # {
+    #     "token": "27",
+    #     "signal": "SELL_ENTRY",
+    #     "target": 350.0,
+    #     "stop_loss": 124.5,
+    #     "unique_id": "a8f73199-446a-4cb4-84d0-c56e83d8a35a",
+    #     "description": "qwerty",
+    #     "strike_data": {
+    #         "DOE": "2026-01-30",
+    #         "token": "55116",
+    #         "symbol": "NIFTY30JAN19500CE",
+    #         "lot_qty": 50,
+    #         "exchange": "NSE",
+    #         "position": "CE",
+    #         "index_name": "NIFTY",
+    #         "strike_price": 19500
+    #     },
+    #     "strategy_code": "DAIKOKUTEN"
+    # }
+        Payload = SignalExitRequest(
+            token=payload["token"],
+            signal=payload["signal"],
+            unique_id=payload["unique_id"],
+            strike_data=payload["strike_data"],
+            strategy_code=payload["strategy_code"],
+            signal_category="EXIT",
+            timestamp=datetime.now(ZoneInfo("Asia/Kolkata"))
+        )
         SignalService.process_exit_signal_v3(signal_data=Payload,db=db)
         return True
 
