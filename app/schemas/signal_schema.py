@@ -3,7 +3,7 @@ Signal schemas for trading entry and exit signals
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional,List
 
 
 class StrikeData(BaseModel):
@@ -27,10 +27,26 @@ class SignalBase(BaseModel):
     strategy_code: str = Field(..., description="Code of the strategy")
     strike_data: StrikeData = Field(..., description="Nested strike data information")
 
-
 class SignalEntryRequest(SignalBase):
     """Schema for entry signal request"""
     pass
+
+class AdminSignalRequestBase(SignalBase):
+    """Base schema for admin signal requests"""
+    user_ids: Optional[List[int]] = Field(
+        None, description="List of user IDs"
+    )
+
+
+class AdminSignalEntryRequest(AdminSignalRequestBase):
+    """Schema for entry signal request"""
+    pass
+
+
+class AdminSignalExitRequest(AdminSignalRequestBase):
+    """Schema for exit signal request"""
+    pass
+    
 
 
 class SignalExitRequest(SignalBase):
