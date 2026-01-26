@@ -182,6 +182,8 @@ class AdminService:
                 "target": target,
                 "signal_count": signal_count,
                 "status": "OPEN" if signal_count == 1 else "CLOSED",
+                'current_price':30,
+                'entry_price':20
             }
             for payload, stop_loss, target, signal_count in rows
         ]
