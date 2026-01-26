@@ -1,7 +1,7 @@
 
 
 
-from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest
+from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest ,StrikeData
 from app.models.models import SignalLog, StrikeInstrument, Strategy 
 import threading
 from datetime import datetime
@@ -168,7 +168,8 @@ class AdminService:
             .join(subq, SignalLog.unique_id == subq.c.unique_id)
             .filter(
                 SignalLog.timestamp >= today,
-                SignalLog.timestamp < tomorrow
+                SignalLog.timestamp < tomorrow,
+                SignalLog.signal_category == "ENTRY"
             )
             .order_by(SignalLog.id.desc())
             .all()
@@ -188,7 +189,7 @@ class AdminService:
 
     @staticmethod
     def kill_trade_v1(unique_id:str,db:Session):
-        signal_log = db.query(SignalLog.payload).filter(SignalLog.unique_id == unique_id).order_by(SignalLog.id.desc()).first()
+        payload = db.query(SignalLog.payload).filter(SignalLog.unique_id == unique_id).order_by(SignalLog.id.desc()).first()
     # {
     #     "token": "27",
     #     "signal": "SELL_ENTRY",
@@ -208,15 +209,31 @@ class AdminService:
     #     },
     #     "strategy_code": "DAIKOKUTEN"
     # }
+        print(payload)
+        payload=payload[0]
+        strike_data = StrikeData(
+            token=payload["strike_data"]["token"],
+            symbol=payload["strike_data"]["symbol"],
+            exchange=payload["strike_data"]["exchange"],
+            position=payload["strike_data"]["position"],
+            index_name=payload["strike_data"]["index_name"],
+            strike_price=payload["strike_data"]["strike_price"],
+            DOE=payload["strike_data"]["DOE"],
+            lot_qty=payload["strike_data"]["lot_qty"],
+        )
         Payload = SignalExitRequest(
             token=payload["token"],
-            signal=payload["signal"],
+            signal= 'BUY_EXIT' if payload["signal"] == 'BUY_ENTRY' else 'SELL_EXIT',
             unique_id=payload["unique_id"],
-            strike_data=payload["strike_data"],
+            strike_data=strike_data,
             strategy_code=payload["strategy_code"],
             signal_category="EXIT",
+            stop_loss=payload["stop_loss"],
+            target=payload["target"],
+            description=payload["description"],
             timestamp=datetime.now(ZoneInfo("Asia/Kolkata"))
         )
+        print(123)
         SignalService.process_exit_signal_v3(signal_data=Payload,db=db)
         return True
 
