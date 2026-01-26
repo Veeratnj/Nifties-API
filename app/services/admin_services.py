@@ -141,7 +141,7 @@ class AdminService:
 
 
     @staticmethod
-    def show_all_today_live_trades_v1(db: Session):
+    def show_all_today_live_trades_v10(db: Session):
         today = date.today()
         tomorrow = today + timedelta(days=1)
 
@@ -189,28 +189,136 @@ class AdminService:
         ]
 
 
+
+    @staticmethod
+    def show_all_today_live_trades_v1(db: Session, user_id: int = 2):
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+
+        # -----------------------------
+        # Subquery: count signals per unique_id
+        # -----------------------------
+        subq = (
+            db.query(
+                SignalLog.unique_id,
+                func.count(SignalLog.unique_id).label("signal_count")
+            )
+            .filter(
+                SignalLog.timestamp >= today,
+                SignalLog.timestamp < tomorrow
+            )
+            .group_by(SignalLog.unique_id)
+            .subquery()
+        )
+
+        # -----------------------------
+        # Main query (ENTRY signals only)
+        # -----------------------------
+        rows = (
+            db.query(
+                SignalLog.id,
+                SignalLog.token,
+                SignalLog.payload,
+                SignalLog.stop_loss,
+                SignalLog.target,
+                subq.c.signal_count
+            )
+            .join(subq, SignalLog.unique_id == subq.c.unique_id)
+            .filter(
+                SignalLog.timestamp >= today,
+                SignalLog.timestamp < tomorrow,
+                SignalLog.signal_category == "ENTRY"
+            )
+            .order_by(SignalLog.id.desc())
+            .all()
+        )
+
+        results = []
+
+        for signal_id, token, payload, stop_loss, target, signal_count in rows:
+            data = dict(payload) if payload else {}
+
+            # -----------------------------
+            # Entry price
+            # -----------------------------
+            entry_price = (
+                db.query(Order.entry_price)
+                .filter(
+                    Order.user_id == user_id,
+                    Order.signal_log_id == signal_id,
+                    Order.is_deleted == False
+                )
+                .scalar()
+            )
+
+            # -----------------------------
+            # Exit price (if exited)
+            # -----------------------------
+            exit_price = (
+                db.query(Order.exit_price)
+                .filter(
+                    Order.user_id == user_id,
+                    Order.signal_log_id == signal_id,
+                    Order.is_deleted == False
+                )
+                .scalar()
+            )
+
+            # -----------------------------
+            # Current price
+            # -----------------------------
+            if exit_price is not None:
+                current_price = exit_price
+            else:
+                current_price = (
+                    db.query(StrikePriceTickData.ltp)
+                    .filter(
+                        StrikePriceTickData.token == token,
+                        StrikePriceTickData.is_deleted == False
+                    )
+                    .scalar()
+                )
+
+            # -----------------------------
+            # Final response object
+            # -----------------------------
+            data.update({
+                "stop_loss": stop_loss,
+                "target": target,
+                "signal_count": signal_count,
+                "status": "OPEN" if signal_count == 1 else "CLOSED",
+                "entry_price": entry_price,
+                "current_price": current_price
+            })
+
+            results.append(data)
+
+        return results
+
+
+
     @staticmethod
     def kill_trade_v1(unique_id:str,db:Session):
         payload = db.query(SignalLog.payload).filter(SignalLog.unique_id == unique_id).order_by(SignalLog.id.desc()).first()
-    # {
-    #     "token": "27",
-    #     "signal": "SELL_ENTRY",
-    #     "target": 350.0,
-    #     "stop_loss": 124.5,
-    #     "unique_id": "a8f73199-446a-4cb4-84d0-c56e83d8a35a",
-    #     "description": "qwerty",
-    #     "strike_data": {
-    #         "DOE": "2026-01-30",
-    #         "token": "55116",
-    #         "symbol": "NIFTY30JAN19500CE",
-    #         "lot_qty": 50,
-    #         "exchange": "NSE",
-    #         "position": "CE",
-    #         "index_name": "NIFTY",
-    #         "strike_price": 19500
-    #     },
-    #     "strategy_code": "DAIKOKUTEN"
-    # }
+        # {
+        #     "token": "27",
+        #     "signal": "SELL_ENTRY",
+        #     "target": 350.0,
+        #     "stop_loss": 124.5,
+        #     "unique_id": "a8f73199-446a-4cb4-84d0-c56e83d8a35a",
+        #     "description": "qwerty",
+        #     "strike_data": {
+        #         "DOE": "2026-01-30",
+        #         "token": "55116",
+        #         "symbol": "NIFTY30JAN19500CE",
+        #         "lot_qty": 50,
+        #         "exchange": "NSE",
+        #         "position": "CE",
+        #         "index_name": "NIFTY",
+        #         "strike_price": 19500
+        #     },
+        #     "strategy_code": "DAIKOKUTEN"
+        # }
         print(payload)
         payload=payload[0]
         strike_data = StrikeData(
