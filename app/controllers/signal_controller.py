@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from fastapi import BackgroundTasks
 from fastapi import Request
-
+from app.models.models import SignalLog, AdminDhanCreds
 from app.db.db import get_db
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest, SignalResponse, LTPInsertRequest
 from app.services.signal_service import SignalService
@@ -469,3 +469,49 @@ async def get_stop_loss_target(unique_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
+@router.get("/get-stop-loss-target/v1/{unique_id}", status_code=status.HTTP_200_OK)
+async def get_stop_loss_target(unique_id: str, db: Session = Depends(get_db)):
+    try:
+        signal = db.query(SignalLog).filter(SignalLog.unique_id == unique_id,SignalLog.signal_category == "ENTRY").first()
+        if not signal:
+            return {
+                "stop_loss": None,
+                "target": None,
+            }
+        return {
+            "stop_loss": signal.stop_loss,
+            "target": signal.target,
+                # "description": signal.description
+            }
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+@router.get("/get-admin-dhan-creds/{id}")
+def get_admin_dhan_creds(
+    id: int,
+    db: Session = Depends(get_db)
+):
+    admin_dhan_creds = (
+        db.query(
+            AdminDhanCreds.client_id,
+            AdminDhanCreds.access_token
+        )
+        .filter(
+            AdminDhanCreds.id == id,
+            AdminDhanCreds.is_deleted == False
+        )
+        .first()
+    )
+
+    if not admin_dhan_creds:
+        return None
+
+    return {
+        "client_id": admin_dhan_creds.client_id,
+        "access_token": admin_dhan_creds.access_token
+    }
+
+        # 
+    

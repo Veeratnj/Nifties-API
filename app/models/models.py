@@ -1597,3 +1597,16 @@ class StrikeInstrument(Base):
 
 
 
+class AdminDhanCreds(Base):
+    __tablename__ = "admin_dhan_creds"
+
+    id = Column(BigInteger, primary_key=True)
+    client_id = Column(Text, nullable=False)
+    access_token = Column(Text, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+    is_deleted = Column(Boolean, nullable=False, default=False)
+
