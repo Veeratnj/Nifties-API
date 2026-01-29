@@ -96,7 +96,7 @@ class PositionService:
 
         'nearby  ltp after entry time '
         if entry_price==0:
-            print('entry price is zero')
+            # print('entry price is zero')
             entry_price = db.query(StrikePriceTickData.ltp).filter(StrikePriceTickData.symbol == order.symbol, 
                         StrikePriceTickData.created_at >= order.entry_time).order_by(StrikePriceTickData.created_at.asc()).limit(1).scalar()
             print(entry_price)
@@ -104,7 +104,7 @@ class PositionService:
             order.entry_price = float(entry_price or 0)
             db.add(order)
             db.flush()  
-        
+        # print('hi')
         # Determine side
         side = "BUY"
         if order.signal_log:
@@ -124,7 +124,7 @@ class PositionService:
         # Calculate PnL
         pnl = 0.0
         pnl_percent = 0.0
-        
+        # print('hi')
         if current_price > 0 and entry_price > 0 and qty > 0:
             if True:
             # if "BUY" in side.upper():
@@ -136,15 +136,15 @@ class PositionService:
         
         # Get strategy name
         strategy_name = order.strategy.name if order.strategy else None
-
-        
-        
+        # print(order.symbol)
+        # # print(order.symbol.split("-")[-2])
+        # print('hooo')
         return {
             "id": order.id,
             "user_id": order.user_id,
             "symbol": order.symbol,
             "index": 'NSE' if 'nifty' in order.symbol.lower() else 'BSE' if 'sensex' in order.symbol.lower() else  'MCX', 
-            "strike": order.symbol.split("-")[-2], 
+            "strike": order.symbol.split("-")[-2] if "-" in order.symbol else order.symbol.split(" ")[-2], 
             "type": order.option_type,
             "qty": qty,
             "entry_price": entry_price,
