@@ -284,6 +284,7 @@ class AngelOneCredentials(Base):
     username = Column(String(50), nullable=False)
     password = Column(String(50), nullable=False)
     token = Column(Text, nullable=False)
+    client_id = Column(Text, nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(

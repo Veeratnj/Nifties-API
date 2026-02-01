@@ -12,7 +12,7 @@ from fastapi import Request
 
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest
 from app.models.models import SignalLog, Order, Position , Trade , Strategy ,StrikeInstrument
-from app.services.order_service_utils import get_all_traders_id,get_dhan_credentials,call_broker_dhan_api
+from app.services.order_service_utils import get_all_traders_id,get_dhan_credentials,call_broker_api
 from app.services.broker_services import place_dhan_order_standalone
 
 
@@ -162,7 +162,7 @@ class SignalService:
         db.commit()
 
         for trader_id in traders_ids:
-            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data,)).start()
+            threading.Thread(target=call_broker_api, args=(trader_id,signal_log_id,signal_data,)).start()
         print('check point 3')
             
                 
