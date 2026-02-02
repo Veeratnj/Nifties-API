@@ -205,7 +205,7 @@ class SignalService:
         angelone_symbol=get_angelone_symbol(token=int(signal_data.strike_data.token))
 
         for trader_id in traders_ids:
-            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,angelone_symbol,signal_data)).start()
+            threading.Thread(target=call_broker_api, args=(trader_id,signal_log_id,angelone_symbol,signal_data)).start()
 
 
             
