@@ -48,7 +48,7 @@ def build_angelone_order(signal_data,transaction_list: list) -> Dict[str, Any]:
         "tradingsymbol": strike.symbol,      # <-- from StrikeData
         "symboltoken": strike.token,        # <-- from StrikeData
         "transactiontype": "BUY" if signal_data.signal.lower() in transaction_list else 'SELL',
-        "exchange": strike.exchange,        # <-- from StrikeData
+        "exchange": "NFO" if strike.exchange == "NSE_FNO" else "BFO",        # <-- from StrikeData
         "ordertype": "MARKET",
         "producttype": "INTRADAY",
         "duration": "DAY",
