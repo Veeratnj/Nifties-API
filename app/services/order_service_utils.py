@@ -66,6 +66,7 @@ def build_angelone_order(signal_data,transaction_list: list) -> Dict[str, Any]:
 
 def place_angelone_order(smart_api_obj, signal_data,transaction_list: list):
     order_params = build_angelone_order(signal_data,transaction_list)
+    print("Order Params:", order_params)
     response = smart_api_obj.placeOrder(order_params)
     # with open('angelone_order_log.txt', 'a') as f:
     #     f.write(f"Order Response: {response}\n")
@@ -293,11 +294,11 @@ def call_broker_api(trader_id: int,signal_log_id: int, signal_data, db: Session=
                 password=angelone_creds["password"],
                 totp_token=angelone_creds["access_token"],
             )
-            print('AngelOne Response:', smart_api)
+            print('AngelOne Login Response:', smart_api)
             response = place_angelone_order(smart_api_obj=smart_api, 
                                 signal_data=signal_data,
                                 transaction_list=transaction_list)
-            print('AngelOne Response:', response)                
+            print('AngelOne Order Response:', response)                
         except Exception as e:
             error_msg = f'AngelOne Error: {str(e)}'
             print(error_msg)
