@@ -14,6 +14,7 @@ from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest
 from app.models.models import SignalLog, Order, Position , Trade , Strategy ,StrikeInstrument
 from app.services.order_service_utils import get_all_traders_id,get_dhan_credentials,call_broker_api
 from app.services.broker_services import place_dhan_order_standalone
+from app.services.order_service_utils import get_angelone_symbol
 
 
 import threading
@@ -160,22 +161,18 @@ class SignalService:
             is_deleted=False
         ))
         db.commit()
-        import pandas as pd
-        df=pd.read_csv('OpenAPIScripMaster.csv')
-        print('columns',df.columns)
-        print(df.info())
-        print(df.head())
-        print(signal_data.strike_data.token)
-        # angelone_symbol=df[df['token'] == signal_data.strike_data.token]['symbol'].values[0]
-        angelone_symbol = (
-            df.loc[df['token'] == int(signal_data.strike_data.token), 'symbol']
-            .iloc[0]
-            if not df[df['token'] == int(signal_data.strike_data.token)].empty
-            else None
-        )
+        # import pandas as pd
+        # df=pd.read_csv('OpenAPIScripMaster.csv')
+
+        # angelone_symbol = (
+        #     df.loc[df['token'] == int(signal_data.strike_data.token), 'symbol']
+        #     .iloc[0]
+        #     if not df[df['token'] == int(signal_data.strike_data.token)].empty
+        #     else None
+        # )
+        angelone_symbol=get_angelone_symbol(token=int(signal_data.strike_data.token))
 
 
-        print('angelone_symbol',angelone_symbol)
         for trader_id in traders_ids:
             threading.Thread(target=call_broker_api, args=(trader_id,signal_log_id,angelone_symbol,signal_data,)).start()
         print('check point 3')
@@ -205,9 +202,10 @@ class SignalService:
         print('exit check point 2',signal_log_id)
         traders_ids = get_all_traders_id(db=db)
         print('exit check point 3',traders_ids)
+        angelone_symbol=get_angelone_symbol(token=int(signal_data.strike_data.token))
 
         for trader_id in traders_ids:
-            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data)).start()
+            threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,angelone_symbol,signal_data)).start()
 
 
             

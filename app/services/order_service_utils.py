@@ -15,6 +15,19 @@ import pyotp
 def get_all_traders_id(db: Session) -> List[int]:
     return list(map(lambda x: x.id, db.query(User.id).filter(User.role == "TRADER").all()))
 
+def get_angelone_symbol(token:int):
+    import pandas as pd
+    df=pd.read_csv('OpenAPIScripMaster.csv')
+
+    return (
+        df.loc[df['token'] == int(token), 'symbol']
+        .iloc[0]
+        if not df[df['token'] == int(token)].empty
+        else None
+    )
+
+    
+
 
 
 def get_dhan_credentials(trader_id: int, db: Session) -> dict[str, str]:
