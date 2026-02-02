@@ -189,3 +189,9 @@ async def edit_instrument_v1(instrument_info:InstrumentEditRequest,db: Session =
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
+@router.get("/get-all-users-info/v1", status_code=status.HTTP_200_OK)
+async def  get_all_users_info_v1(db: Session = Depends(get_db)):
+  try:
+    return AdminService.get_all_users_info_v1(db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

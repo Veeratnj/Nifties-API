@@ -519,3 +519,41 @@ class KillTradeSignalResponse(BaseModel):
     message: Optional[str] = Field(None, description="Optional message or reason")
 
 
+
+
+
+class DhanInfoSchema(BaseModel):
+    client_id: str = Field(..., min_length=1, description="Dhan Client ID")
+    access_token: str = Field(..., min_length=1, description="Dhan Access Token")
+    is_active: bool = Field(..., description="Is Active")
+
+    class Config:
+        orm_mode = True
+
+
+class AngeloneInfoSchema(BaseModel):
+    api_key: str = Field(..., min_length=1, description="AngelOne API Key")
+    username: str = Field(..., min_length=1, description="AngelOne Username")
+    password: str = Field(..., min_length=1, description="AngelOne Password")
+    token: str = Field(..., min_length=1, description="AngelOne Session Token")
+    is_active: bool = Field(..., description="Is Active")
+
+    class Config:
+        orm_mode = True
+
+
+class UserInformationSchema(BaseModel):
+    """Schema for user information"""
+
+    user_id: int = Field(..., gt=0, description="User ID")
+    name: str = Field(..., min_length=2, description="User name")
+    email: str = Field(..., description="User email")
+    phone: str = Field(..., description="10-digit phone number")
+    role: str = Field(..., description="User role")
+    is_active: bool = Field( description="Is Active")
+
+    dhan_info: Optional[DhanInfoSchema] = None
+    angelone_info: Optional[AngeloneInfoSchema] = None
+
+    class Config:
+        orm_mode = True

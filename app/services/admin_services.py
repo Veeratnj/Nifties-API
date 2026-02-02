@@ -2,7 +2,7 @@
 
 
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest ,StrikeData
-from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData ,SymbolMaster
+from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData ,SymbolMaster,User,DhanCredentials,AngelOneCredentials
 import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -398,6 +398,109 @@ class AdminService:
 
         db.commit()
         return True
+
+
+    @staticmethod
+    def get_all_users_info_v(db:Session):
+        # users= db.query(
+        #     User.id.label("user_id"),
+        #     User.name.label("name"),
+        #     User.email.label("email"),
+        #     User.phone.label("phone"),
+        #     User.role.label("role"),
+        #     User.is_active.label("is_active"),
+        # ).all()
+
+        # dhan_accounts = db.query(
+        #     DhanAccount.user_id.label("user_id"),
+        #     DhanAccount.client_id.label("client_id"),
+        #     DhanAccount.access_token.label("access_token"),
+        #     DhanAccount.is_active.label("is_active"),
+        # ).all()
+
+        # angel_accounts = db.query(
+        #     AngelOneCredentials.user_id.label("user_id"),
+        #     AngelOneCredentials.api_key.label("api_key"),
+        #     AngelOneCredentials.username.label("username"),
+        #     AngelOneCredentials.password.label("password"),
+        #     AngelOneCredentials.token.label("token"),
+        #     AngelOneCredentials.is_active.label("is_active"),
+        # ).all()
+        print(123)
+        users = (
+                db.query(User)
+                .options(
+                    joinedload(User.dhan_info),
+                    joinedload(User.angelone_info),
+                )
+                .all()
+            )
+        print(users)
+        return users
+
+
+    @staticmethod
+    def get_all_users_info_v1(db: Session):
+        rows = (
+            db.query(
+                User.id.label("user_id"),
+                User.username,
+                User.email,
+                User.phone,
+                User.role,
+                User.is_active,
+                DhanCredentials.client_id,
+                DhanCredentials.access_token,
+                DhanCredentials.is_active.label("dhan_is_active"),
+                AngelOneCredentials.username.label("angelone_username"),
+                AngelOneCredentials.password.label("angelone_password"),
+                AngelOneCredentials.token.label("angelone_token"),
+                AngelOneCredentials.api_key.label("angelone_api_key"),
+                AngelOneCredentials.is_active.label("angelone_is_active"),
+            )
+            .outerjoin(DhanCredentials, DhanCredentials.user_id == User.id)
+            .outerjoin(AngelOneCredentials, AngelOneCredentials.user_id == User.id)
+            .order_by(User.id)
+            .all()
+        )
+
+        # ---- Transform flat rows → nested Pydantic structure ----
+        users = []
+        for r in rows:
+            user_dict = {
+                "user_id": r.user_id,
+                "name": r.username,
+                "email": r.email,
+                "phone": r.phone,
+                "role": r.role,
+                "is_active": r.is_active,
+                "dhan_info": None,
+                "angelone_info": None,
+            }
+
+            if r.client_id:   # means Dhan exists
+                user_dict["dhan_info"] = {
+                    "client_id": r.client_id,
+                    "access_token": r.access_token,
+                    "is_active": r.dhan_is_active,
+                }
+
+            if r.angelone_username:  # means AngelOne exists
+                user_dict["angelone_info"] = {
+                    "api_key": r.angelone_api_key,
+                    "username": r.angelone_username,
+                    "password": r.angelone_password,
+                    "token": r.angelone_token,
+                    "is_active": r.angelone_is_active,
+                }
+
+            users.append(user_dict)
+
+        return users
+
+
+
+        
         
 
 

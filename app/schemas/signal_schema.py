@@ -78,3 +78,6 @@ class InstrumentEditRequest(BaseModel):
     exchange: str = Field(..., description="Exchange identifier")
     instrument_type: str = Field(..., description="Instrument type")
     is_active: bool = Field(..., description="Is active")
+
+
+    
