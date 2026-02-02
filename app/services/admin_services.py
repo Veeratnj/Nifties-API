@@ -374,6 +374,31 @@ class AdminService:
                 for r in result
             ]
 
+    @staticmethod
+    def edit_instrument_v1(instrument_info, db: Session):
+        rows_updated = (
+                    db.query(SymbolMaster)
+                    .filter(SymbolMaster.token == instrument_info.token)
+                    .update(
+                    {
+                        SymbolMaster.symbol: instrument_info.symbol,
+                        SymbolMaster.exchange: instrument_info.exchange,
+                        SymbolMaster.instrument_type: instrument_info.instrument_type,
+                        SymbolMaster.is_active: instrument_info.is_active,
+                        SymbolMaster.updated_at: datetime.now(ZoneInfo("Asia/Kolkata")),
+                    },
+                    synchronize_session=False,
+                )
+            )
+
+        if rows_updated == 0:
+            db.rollback()
+            return False  # token not found
+
+        db.commit()
+        return True
+        
+
 
 
 

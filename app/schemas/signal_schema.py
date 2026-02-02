@@ -69,3 +69,12 @@ class SignalResponse(BaseModel):
     success: bool
     message: str
     data: Optional[dict] = None
+
+
+class InstrumentEditRequest(BaseModel):
+    """Schema for editing instrument"""
+    token: str = Field(..., description="Token of the strike")
+    symbol: str = Field(..., description="Trading symbol")
+    exchange: str = Field(..., description="Exchange identifier")
+    instrument_type: str = Field(..., description="Instrument type")
+    is_active: bool = Field(..., description="Is active")
