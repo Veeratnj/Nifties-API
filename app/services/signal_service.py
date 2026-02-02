@@ -177,7 +177,7 @@ class SignalService:
 
         print('angelone_symbol',angelone_symbol)
         for trader_id in traders_ids:
-            threading.Thread(target=call_broker_api, args=(trader_id,signal_log_id,signal_data,angelone_symbol)).start()
+            threading.Thread(target=call_broker_api, args=(trader_id,signal_log_id,angelone_symbol,signal_data,)).start()
         print('check point 3')
             
                 

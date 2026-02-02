@@ -216,7 +216,7 @@ def handle_order(trader_id: int, signal_log_id: int, strike_data, signal_data, t
 
 
 
-def call_broker_api(trader_id: int,signal_log_id: int, signal_data, db: Session=None,angelone_symbol: str=None):
+def call_broker_api(trader_id: int,signal_log_id: int,angelone_symbol: str, signal_data, db: Session=None,):
     from app.db.db import SessionLocal
     db = SessionLocal()
     print(f'Placing order for trader_id: {trader_id}, signal_log_id: {signal_log_id}')
