@@ -299,8 +299,9 @@ def call_broker_api(trader_id: int,signal_log_id: int, signal_data, db: Session=
                                 transaction_list=transaction_list)
                 
         except Exception as e:
-            print('AngelOne Error:', e)
-            raise 'AngelOne Error '+str(e)
+            error_msg = f'AngelOne Error: {str(e)}'
+            print(error_msg)
+            raise Exception(error_msg)
         handle_order(
                         trader_id=trader_id, 
                         signal_log_id=signal_log_id, 
