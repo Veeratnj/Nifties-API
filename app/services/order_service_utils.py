@@ -66,10 +66,20 @@ def build_angelone_order(signal_data,transaction_list: list) -> Dict[str, Any]:
 
 def place_angelone_order(smart_api_obj, signal_data,transaction_list: list):
     order_params = build_angelone_order(signal_data,transaction_list)
+    order_params = {
+        "variety": "NORMAL",
+        "tradingsymbol": "NIFTY-Feb2026-24800-CE",
+        "symboltoken": "49774",
+        "transactiontype": "BUY",
+        "exchange": "NSE_FNO",
+        "ordertype": "MARKET",
+        "producttype": "INTRADAY",
+        "duration": "DAY",
+        "quantity": 65
+        }
+
     print("Order Params:", order_params)
     response = smart_api_obj.placeOrder(order_params)
-    # with open('angelone_order_log.txt', 'a') as f:
-    #     f.write(f"Order Response: {response}\n")
     print("Order Response:", response)
     return response
 
