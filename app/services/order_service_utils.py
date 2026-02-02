@@ -55,7 +55,7 @@ def build_angelone_order(signal_data,transaction_list: list) -> Dict[str, Any]:
         "price": "0",
         "squareoff": "0",
         "stoploss": "0",
-        "quantity": signal_data.quantity               # your calculated qty
+        "quantity": strike.lot_qty              # your calculated qty
     }
 
     return order_params
@@ -67,6 +67,8 @@ def build_angelone_order(signal_data,transaction_list: list) -> Dict[str, Any]:
 def place_angelone_order(smart_api_obj, signal_data,transaction_list: list):
     order_params = build_angelone_order(signal_data,transaction_list)
     response = smart_api_obj.placeOrder(order_params)
+    with open('angelone_order_log.txt', 'a') as f:
+        f.write(f"Order Response: {response}\n")
     print("Order Response:", response)
     return response
 
@@ -289,7 +291,7 @@ def call_broker_api(trader_id: int,signal_log_id: int, signal_data, db: Session=
                 api_key=angelone_creds["api_key"],
                 username=angelone_creds["username"],
                 password=angelone_creds["password"],
-                totp_token=angelone_creds["totp_token"],
+                totp_token=angelone_creds["access_token"],
             )
 
             place_angelone_order(smart_api_obj=smart_api, 
