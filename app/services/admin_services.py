@@ -2,7 +2,7 @@
 
 
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest ,StrikeData
-from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData
+from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData ,SymbolMaster
 import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -352,6 +352,28 @@ class AdminService:
         print(123)
         SignalService.process_exit_signal_v3(signal_data=Payload,db=db)
         return True
+
+    @staticmethod
+    def get_all_instruments_v1(db:Session):
+        result = db.query(
+            SymbolMaster.token.label("token"),
+            SymbolMaster.symbol.label("symbol"),
+            SymbolMaster.exchange.label("exchange"),
+            SymbolMaster.instrument_type.label("instrument_type"),
+            SymbolMaster.is_active.label("is_active"),
+        ).all()
+
+        return [
+                {
+                    "token": r.token,
+                    "symbol": r.symbol,
+                    "exchange": r.exchange,
+                    "instrument_type": r.instrument_type,
+                    "is_active": r.is_active,
+                }
+                for r in result
+            ]
+
 
 
 

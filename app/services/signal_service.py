@@ -181,6 +181,7 @@ class SignalService:
 
     @staticmethod
     def process_exit_signal_v3(db: Session, signal_data: SignalExitRequest) -> Dict[str, Any]:
+        print('exit check point 1')
         signal_log_id = db.query(SignalLog.id).filter(SignalLog.unique_id == signal_data.unique_id).scalar()
         print('exit check point 0',signal_log_id)
         db.add(SignalLog(

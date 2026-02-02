@@ -170,3 +170,17 @@ async def update_stop_loss_target_v1(unique_id:str,stop_loss:float,target:float,
     return AdminService.update_stop_loss_target_v1(unique_id=unique_id,stop_loss=stop_loss,target=target,db=db)
   except Exception as e:
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+@router.get("/get-all-instruments/v1", status_code=status.HTTP_200_OK)
+async def get_all_instruments_v1(db: Session = Depends(get_db)):
+  try:
+    return AdminService.get_all_instruments_v1(db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+
+

@@ -54,7 +54,7 @@ app = FastAPI(
     version=API_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
 )
 
 @app.get("/health")
