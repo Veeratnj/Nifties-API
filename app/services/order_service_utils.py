@@ -66,6 +66,7 @@ def build_angelone_order(signal_data,transaction_list: list,angelone_symbol: str
 
 
 def place_angelone_order(smart_api_obj, signal_data,transaction_list: list,angelone_symbol: str):
+    print('angelone_symbol',angelone_symbol)
     order_params = build_angelone_order(signal_data,transaction_list,angelone_symbol)
     # order_params = {
     #     "variety": "NORMAL",
