@@ -28,7 +28,7 @@ def get_dhan_credentials(trader_id: int, db: Session) -> dict[str, str]:
 
 from typing import Dict, Any
 
-def build_angelone_order(signal_data: SignalEntryRequest,transaction_list: list) -> Dict[str, Any]:
+def build_angelone_order(signal_data,transaction_list: list) -> Dict[str, Any]:
     """
     Convert SignalEntryRequest payload into AngelOne order format
     """
