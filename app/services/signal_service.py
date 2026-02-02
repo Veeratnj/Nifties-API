@@ -160,9 +160,24 @@ class SignalService:
             is_deleted=False
         ))
         db.commit()
+        import pandas as pd
+        df=pd.read_csv('OpenAPIScripMaster.csv')
+        print('columns',df.columns)
+        print(df.info())
+        print(df.head())
+        print(signal_data.strike_data.token)
+        # angelone_symbol=df[df['token'] == signal_data.strike_data.token]['symbol'].values[0]
+        angelone_symbol = (
+            df.loc[df['token'] == int(signal_data.strike_data.token), 'symbol']
+            .iloc[0]
+            if not df[df['token'] == int(signal_data.strike_data.token)].empty
+            else None
+        )
 
+
+        print('angelone_symbol',angelone_symbol)
         for trader_id in traders_ids:
-            threading.Thread(target=call_broker_api, args=(trader_id,signal_log_id,signal_data,)).start()
+            threading.Thread(target=call_broker_api, args=(trader_id,signal_log_id,signal_data,angelone_symbol)).start()
         print('check point 3')
             
                 

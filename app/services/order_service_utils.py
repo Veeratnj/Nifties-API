@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from dhanhq import dhanhq, DhanContext
 from fastapi import Request
+import pandas as pd
 import time
 from SmartApi import SmartConnect
 import pyotp
@@ -28,7 +29,7 @@ def get_dhan_credentials(trader_id: int, db: Session) -> dict[str, str]:
 
 from typing import Dict, Any
 
-def build_angelone_order(signal_data,transaction_list: list) -> Dict[str, Any]:
+def build_angelone_order(signal_data,transaction_list: list,angelone_symbol: str) -> Dict[str, Any]:
     """
     Convert SignalEntryRequest payload into AngelOne order format
     """
@@ -45,7 +46,7 @@ def build_angelone_order(signal_data,transaction_list: list) -> Dict[str, Any]:
 
     order_params = {
         "variety": "NORMAL",
-        "tradingsymbol": "NIFTY03FEB2624800CE",      # <-- from StrikeData NIFTY03FEB2624800CE
+        "tradingsymbol": angelone_symbol,      # <-- from StrikeData NIFTY03FEB2624800CE
         "symboltoken": strike.token,        # <-- from StrikeData NIFTY03FEB2624800CE
         "transactiontype": "BUY" if signal_data.signal.lower() in transaction_list else 'SELL',
         "exchange": "NFO" if strike.exchange == "NSE_FNO" else "BFO",        # <-- from StrikeData
@@ -64,8 +65,8 @@ def build_angelone_order(signal_data,transaction_list: list) -> Dict[str, Any]:
 
 
 
-def place_angelone_order(smart_api_obj, signal_data,transaction_list: list):
-    order_params = build_angelone_order(signal_data,transaction_list)
+def place_angelone_order(smart_api_obj, signal_data,transaction_list: list,angelone_symbol: str):
+    order_params = build_angelone_order(signal_data,transaction_list,angelone_symbol)
     # order_params = {
     #     "variety": "NORMAL",
     #     "tradingsymbol": "NIFTY-Feb2026-24800-CE",
@@ -214,7 +215,7 @@ def handle_order(trader_id: int, signal_log_id: int, strike_data, signal_data, t
 
 
 
-def call_broker_api(trader_id: int,signal_log_id: int, signal_data, db: Session=None):
+def call_broker_api(trader_id: int,signal_log_id: int, signal_data, db: Session=None,angelone_symbol: str=None):
     from app.db.db import SessionLocal
     db = SessionLocal()
     print(f'Placing order for trader_id: {trader_id}, signal_log_id: {signal_log_id}')
@@ -307,7 +308,8 @@ def call_broker_api(trader_id: int,signal_log_id: int, signal_data, db: Session=
             print('AngelOne Login Response:', smart_api)
             response = place_angelone_order(smart_api_obj=smart_api, 
                                 signal_data=signal_data,
-                                transaction_list=transaction_list)
+                                transaction_list=transaction_list,
+                                angelone_symbol=angelone_symbol)
             print('AngelOne Order Response:', response)                
         except Exception as e:
             error_msg = f'AngelOne Error: {str(e)}'
