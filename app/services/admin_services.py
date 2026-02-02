@@ -385,7 +385,7 @@ class AdminService:
                         SymbolMaster.exchange: instrument_info.exchange,
                         SymbolMaster.instrument_type: instrument_info.instrument_type,
                         SymbolMaster.is_active: instrument_info.is_active,
-                        SymbolMaster.is_deleted: instrument_info.is_active,
+                        SymbolMaster.is_deleted: not instrument_info.is_active,
                         SymbolMaster.updated_at: datetime.now(ZoneInfo("Asia/Kolkata")),
                     },
                     synchronize_session=False,
