@@ -247,7 +247,7 @@ class AdminService:
                     Order.user_id == user_id,
                     Order.signal_log_id == signal_id,
                     Order.is_deleted == False
-                )
+                ).limit(1)
                 .scalar()
             )
 
@@ -260,7 +260,7 @@ class AdminService:
                     Order.user_id == user_id,
                     Order.signal_log_id == signal_id,
                     Order.is_deleted == False
-                )
+                ).limit(1)
                 .scalar()
             )
             print(exit_price)
