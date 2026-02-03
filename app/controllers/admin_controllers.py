@@ -5,8 +5,8 @@ Market controller - Market data endpoints
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from app.schemas.signal_schema import AdminSignalEntryRequest, AdminSignalExitRequest ,InstrumentEditRequest
-
+from app.schemas.signal_schema import AdminSignalEntryRequest, AdminSignalExitRequest ,InstrumentEditRequest 
+from app.schemas.schema import BrokerDetailsUpdateSchema
 from app.db.db import get_db
 from app.models.models import User
 from app.utils.security import get_current_user
@@ -193,5 +193,14 @@ async def edit_instrument_v1(instrument_info:InstrumentEditRequest,db: Session =
 async def  get_all_users_info_v1(db: Session = Depends(get_db)):
   try:
     return AdminService.get_all_users_info_v1(db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+@router.put("/update-user-broker-details/v1", status_code=status.HTTP_201_CREATED)
+async def update_user_broker_details_v1(broker_details:BrokerDetailsUpdateSchema,db: Session = Depends(get_db)):
+  try:
+    return AdminService.update_user_broker_details_v1(broker_details=broker_details,db=db)
   except Exception as e:
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

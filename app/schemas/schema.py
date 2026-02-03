@@ -541,6 +541,14 @@ class AngeloneInfoSchema(BaseModel):
     class Config:
         orm_mode = True
 
+class BrokerDetailsUpdateSchema(BaseModel):
+    user_id: int = Field(..., gt=0, description="User ID")
+    dhan_info: Optional[DhanInfoSchema] = None
+    angelone_info: Optional[AngeloneInfoSchema] = None
+
+    class Config:
+        orm_mode = True
+
 
 class UserInformationSchema(BaseModel):
     """Schema for user information"""
@@ -557,3 +565,5 @@ class UserInformationSchema(BaseModel):
 
     class Config:
         orm_mode = True
+
+

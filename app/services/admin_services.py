@@ -499,6 +499,32 @@ class AdminService:
         return users
 
 
+    @staticmethod
+    def update_user_broker_details_v1(broker_details,db:Session):
+        user_id = broker_details.user_id
+        dhan_info = broker_details.dhan_info
+        angelone_info = broker_details.angelone_info
+      
+        if dhan_info:
+            db.query(DhanCredentials).filter(DhanCredentials.user_id == user_id).update({
+                DhanCredentials.client_id: dhan_info.client_id,
+                DhanCredentials.access_token: dhan_info.access_token,
+                DhanCredentials.is_active: dhan_info.is_active,
+            })
+        if angelone_info:
+            db.query(AngelOneCredentials).filter(AngelOneCredentials.user_id == user_id).update({
+                AngelOneCredentials.api_key: angelone_info.api_key,
+                AngelOneCredentials.username: angelone_info.username,
+                AngelOneCredentials.password: angelone_info.password,
+                AngelOneCredentials.token: angelone_info.token,
+                AngelOneCredentials.is_active: angelone_info.is_active,
+            })
+        db.commit()
+
+        return True
+
+
+
 
         
         
