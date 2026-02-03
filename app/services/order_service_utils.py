@@ -309,9 +309,7 @@ def call_broker_api(trader_id: int,signal_log_id: int,angelone_symbol: str, sign
 
                 open_order.exit_time = datetime.now(ZoneInfo("Asia/Kolkata"))
                 db.commit()
-
-
-    if angelone_creds:
+    elif angelone_creds:
         try:
             smart_api = smartapi_login(
                 api_key=angelone_creds["api_key"],
