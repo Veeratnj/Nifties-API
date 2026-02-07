@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from fastapi import BackgroundTasks
 from fastapi import Request
-from app.models.models import SignalLog, AdminDhanCreds
+from app.models.models import SignalLog, AdminDhanCreds , StrikePriceTickData
 from app.db.db import get_db
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest, SignalResponse, LTPInsertRequest
 from app.services.signal_service import SignalService
@@ -536,4 +536,53 @@ async def update_stop_loss_target(stop_loss: float=None, target: float=None,uniq
             }
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    
+
+
+
+@router.get("/get-strike-price-close-trade-signal/{unique_id}")
+async def get_strike_price_close_trade_signal(
+    unique_id: str, 
+    db: Session = Depends(get_db)
+):
+    try:
+        signal = (
+            db.query(SignalLog)
+            .filter(
+                SignalLog.unique_id == unique_id,
+                SignalLog.signal_category == "ENTRY"
+            )
+            .first()
+        )
+
+        if not signal:
+            return False   # No entry signal found
+
+        # Fetch only LTP value (not a tuple)
+        ltp_row = (
+            db.query(StrikePriceTickData.ltp)
+            .filter(StrikePriceTickData.token == signal.strike_price_token)
+            .first()
+        )
+
+        if not ltp_row:
+            return False   # No live price found
+
+        ltp = ltp_row[0]  # ✅ IMPORTANT FIX
+
+        sl = signal.strike_price_stop_loss
+        target = signal.strike_price_target
+
+        if sl is None or target is None:
+            return False
+
+        # Close trade if SL hit OR Target hit
+        if ltp <= sl or ltp >= target:
+            return True
+
+        return False
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
