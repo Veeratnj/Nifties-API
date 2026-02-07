@@ -514,4 +514,26 @@ def get_admin_dhan_creds(
     }
 
         # 
+
+@router.put("/update-stop-loss-target/v1", status_code=status.HTTP_200_OK)
+async def update_stop_loss_target(stop_loss: float=None, target: float=None,unique_id: str=None, db: Session = Depends(get_db)):
+    try:
+        signal = db.query(SignalLog).filter(SignalLog.unique_id == unique_id,SignalLog.signal_category == "ENTRY").first()
+        if not signal:
+            return {
+                "stop_loss": None,
+                "target": None,
+            }
+        if stop_loss:
+            signal.stop_loss = stop_loss
+        if target:  
+            signal.target = target
+        db.commit()
+        return {
+            "stop_loss": signal.stop_loss,
+            "target": signal.target,
+                # "description": signal.description
+            }
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     

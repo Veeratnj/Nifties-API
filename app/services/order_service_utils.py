@@ -1,7 +1,7 @@
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from app.models.models import Order, User, DhanCredentials , StrikePriceTickData , AngelOneCredentials
+from app.models.models import Order, User, DhanCredentials , StrikePriceTickData , AngelOneCredentials ,SymbolMaster
 from sqlalchemy.orm import Session
 from typing import List
 from dhanhq import dhanhq, DhanContext
@@ -26,7 +26,11 @@ def get_angelone_symbol(token:int):
         else None
     )
 
-    
+
+def check_instrument_isactive(token:int,db:Session):
+    return db.query(SymbolMaster.is_active).filter(SymbolMaster.token == token).first()
+
+
 
 
 
@@ -240,8 +244,10 @@ def call_broker_api(trader_id: int,signal_log_id: int,angelone_symbol: str, sign
     #     return False
     print('Dhan Credentials:', dhan_creds.client_id,dhan_creds.access_token,dhan_creds.user_id)
     transaction_list = ['buy_entry','sell_entry']
-    
-    if dhan_creds:
+    is_active = check_instrument_isactive(token=strike_data.token, db=db)
+    is_non_entry_signal = strike_data.signal.lower() not in transaction_list
+
+    if dhan_creds and (is_active or is_non_entry_signal):
         # dhan_context=DhanContext(client_id=dhan_creds['client_id'], access_token=dhan_creds['access_token'])
         try:
             dhan_context = DhanContext(client_id=dhan_creds.client_id, access_token=dhan_creds.access_token)
@@ -309,7 +315,7 @@ def call_broker_api(trader_id: int,signal_log_id: int,angelone_symbol: str, sign
 
                 open_order.exit_time = datetime.now(ZoneInfo("Asia/Kolkata"))
                 db.commit()
-    elif angelone_creds:
+    elif angelone_creds and False:
         try:
             smart_api = smartapi_login(
                 api_key=angelone_creds["api_key"],
