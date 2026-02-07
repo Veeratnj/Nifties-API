@@ -221,6 +221,8 @@ class AdminService:
                 SignalLog.payload,
                 SignalLog.stop_loss,
                 SignalLog.target,
+                SignalLog.strike_price_stop_loss,
+                SignalLog.strike_price_target,
                 subq.c.signal_count
             )
             .join(subq, SignalLog.unique_id == subq.c.unique_id)
@@ -235,7 +237,7 @@ class AdminService:
 
         results = []
 
-        for signal_id, token, payload, stop_loss, target, signal_count in rows:
+        for signal_id, token, payload, stop_loss, target, strike_price_stop_loss, strike_price_target, signal_count in rows:
             data = dict(payload) if payload else {}
 
             # -----------------------------
@@ -294,7 +296,9 @@ class AdminService:
                 "signal_count": signal_count,
                 "status": "OPEN" if signal_count == 1 else "CLOSED",
                 "entry_price": entry_price,
-                "current_price": current_price
+                "current_price": current_price,
+                "strike_price_stop_loss": strike_price_stop_loss,
+                "strike_price_target": strike_price_target,
             })
 
             results.append(data)

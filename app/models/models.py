@@ -1570,6 +1570,8 @@ class SignalLog(Base):
     payload = Column(JSONB, nullable=True)
     stop_loss = Column(Numeric(10, 2), nullable=True)
     target = Column(Numeric(10, 2), nullable=True)
+    strike_price_stop_loss = Column(Numeric(10, 2), nullable=True)
+    strike_price_target = Column(Numeric(10, 2), nullable=True)
     description = Column(String(255), nullable=True,default="qwerty")
     
     # Indexes
