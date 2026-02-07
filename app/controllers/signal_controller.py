@@ -555,7 +555,7 @@ async def get_strike_price_close_trade_signal(
         )
 
         if not signal:
-            return False   # No entry signal found
+            return {"data":False}   # No entry signal found
 
         # Fetch only LTP value (not a tuple)
         ltp_row = (
@@ -565,7 +565,7 @@ async def get_strike_price_close_trade_signal(
         )
 
         if not ltp_row:
-            return False   # No live price found
+            return {"data":False}   # No live price found
 
         ltp = ltp_row[0]  # ✅ IMPORTANT FIX
 
@@ -573,13 +573,13 @@ async def get_strike_price_close_trade_signal(
         target = signal.strike_price_target
 
         if sl is None or target is None:
-            return False
+            return {"data":False}
 
         # Close trade if SL hit OR Target hit
         if ltp <= sl or ltp >= target:
-            return True
+            return {"data":True}
 
-        return False
+        return {"data":False}
 
     except Exception as e:
         raise HTTPException(
