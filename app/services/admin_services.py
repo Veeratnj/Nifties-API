@@ -128,10 +128,12 @@ class AdminService:
             threading.Thread(target=call_broker_dhan_api, args=(trader_id,signal_log_id,signal_data)).start()
 
     @staticmethod
-    def update_stop_loss_target_v1(unique_id:str,stop_loss:float,target:float,db:Session):
+    def update_stop_loss_target_v1(unique_id:str,stop_loss:float,target:float,strike_price_stop_loss:float,strike_price_target:float,db:Session):
         signal_log = db.query(SignalLog).filter(SignalLog.signal_category == "ENTRY",SignalLog.unique_id == unique_id).order_by(SignalLog.id.desc()).first()
         signal_log.stop_loss = stop_loss
         signal_log.target = target
+        signal_log.strike_price_stop_loss = strike_price_stop_loss
+        signal_log.strike_price_target = strike_price_target
         # signal_log.payload["stop_loss"] = stop_loss
         # signal_log.payload["target"] = target
         db.commit()
