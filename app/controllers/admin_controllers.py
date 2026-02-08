@@ -204,3 +204,19 @@ async def update_user_broker_details_v1(broker_details:BrokerDetailsUpdateSchema
     return AdminService.update_user_broker_details_v1(broker_details=broker_details,db=db)
   except Exception as e:
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+@router.get("/get-scripts-info/v1", status_code=status.HTTP_200_OK)
+async def get_scripts_info_v1(db: Session = Depends(get_db)):
+  try:
+    return AdminService.list_scripts_v1(db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+
+
+
+

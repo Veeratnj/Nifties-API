@@ -1613,3 +1613,20 @@ class AdminDhanCreds(Base):
     )
     is_deleted = Column(Boolean, nullable=False, default=False)
 
+
+class ScriptsInfo(Base):
+    __tablename__ = "scripts_info"
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String(50), nullable=False, index=True)
+    env_location = Column(Text, nullable=False, index=True)
+    script_path = Column(Text, nullable=False, index=True)
+    is_started = Column(Boolean, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    is_deleted = Column(Boolean, nullable=False, default=False)
+
+
+
+
+
+
+

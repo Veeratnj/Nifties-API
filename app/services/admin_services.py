@@ -2,7 +2,7 @@
 
 
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest ,StrikeData
-from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData ,SymbolMaster,User,DhanCredentials,AngelOneCredentials
+from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData ,SymbolMaster,User,DhanCredentials,AngelOneCredentials , ScriptsInfo
 import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -530,9 +530,25 @@ class AdminService:
         return True
 
 
+    @staticmethod
+    def get_status_of_scripts_v1(db:Session):
+        pass
 
 
-        
+    @staticmethod
+    def list_scripts_v1(db:Session):
+        scripts = db.query(ScriptsInfo.id,
+        ScriptsInfo.name,
+        ScriptsInfo.is_started).all()
+
+        scripts_list = []
+        for script in scripts:
+            scripts_list.append({
+                "id": script.id,
+                "name": script.name,
+                "is_started": script.is_started,
+            })
+        return scripts_list    
         
 
 
