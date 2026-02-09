@@ -27,7 +27,8 @@ def get_angelone_symbol(token:int):
     )
 
 
-def check_instrument_isactive(token:int,db:Session):
+def check_instrument_isactive(token:str,db:Session):
+    print(db.query(SymbolMaster.is_active).filter(SymbolMaster.token == token).first())
     return db.query(SymbolMaster.is_active).filter(SymbolMaster.token == token).first()
 
 
@@ -244,9 +245,11 @@ def call_broker_api(trader_id: int,signal_log_id: int,angelone_symbol: str, sign
     #     return False
     print('Dhan Credentials:', dhan_creds.client_id,dhan_creds.access_token,dhan_creds.user_id)
     transaction_list = ['buy_entry','sell_entry']
-    is_active = check_instrument_isactive(token=strike_data.token, db=db)
+    print
+    is_active = check_instrument_isactive(token=str(signal_data.token), db=db)
     is_non_entry_signal = signal_data.signal.lower() not in transaction_list
-
+    print('is_active',is_active)
+    print('is_non_entry_signal',is_non_entry_signal)
     if dhan_creds and (is_active or is_non_entry_signal):
         # dhan_context=DhanContext(client_id=dhan_creds['client_id'], access_token=dhan_creds['access_token'])
         try:
