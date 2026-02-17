@@ -12,14 +12,16 @@ ist = pytz.timezone("Asia/Kolkata")
 
 
 
-def get_dhan_creds():
+def get_dhan_creds1():
     """Fetch admin dhan credentials"""
     try:
         url = "http://localhost:8000/db/signals/get-admin-dhan-creds/1"
         resp = requests.get(url, timeout=5)
+        print('resp',resp)
         resp.raise_for_status()
 
         records = resp.json()   
+        print('records',records)
         return records
 
     except requests.exceptions.ConnectionError:
@@ -33,7 +35,35 @@ def get_dhan_creds():
         return []
 
 
+def get_dhan_creds(id=2):
+    """Fetch admin dhan credentials"""
+    try:
+        # BASE_URL = "http://13.204.188.14:8000"
+        url = f"http://localhost:8000/db/signals/get-admin-dhan-creds/{str(id)}"
+        resp = requests.get(url, timeout=5)
+        resp.raise_for_status()
 
+        records = resp.json()
+        
+        # Strip whitespace from credentials to prevent authentication errors
+        if isinstance(records, dict):
+            if 'client_id' in records:
+                records['client_id'] = str(records['client_id']).strip()
+            if 'access_token' in records:
+                records['access_token'] = records['access_token'].strip()
+        
+        print(f"✅ Fetched credentials for Client ID: {records.get('client_id', 'Unknown')}")
+        return records
+
+    except requests.exceptions.ConnectionError:
+        print("⚠️ API not reachable")
+        return {'client_id': '', 'access_token': ''}
+    except requests.exceptions.Timeout:
+        print("⚠️ API request timeout")
+        return {'client_id': '', 'access_token': ''}
+    except Exception as e:
+        print(f"❌ Error fetching credentials: {e}")
+        return {'client_id': '', 'access_token': ''}
 
 # List of credentials for rotation
 # CREDENTIALS = [
@@ -141,6 +171,7 @@ def insert_spot_ltp_api(token: str, ltp: float):
 def start_ws(instruments, cred_index=0):
     """Start WebSocket connection with specific credentials"""
     cred = CREDENTIALS[cred_index]
+    print('cred',cred)
     client_id = cred['client_id']
     access_token = cred['access_token']
     
