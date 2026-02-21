@@ -130,3 +130,5 @@ venv.bak/
 # VS Code
 .vscode/
 .venv/*
+*.xlsx
+*.csv

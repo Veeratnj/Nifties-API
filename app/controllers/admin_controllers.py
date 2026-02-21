@@ -215,8 +215,10 @@ async def get_scripts_info_v1(db: Session = Depends(get_db)):
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-
-
-
-
+@router.put("/update-strike-price-stop-loss-target/v1", status_code=status.HTTP_201_CREATED)
+async def update_strike_price_stop_loss_target_v1(unique_id:str,strike_price_stop_loss:float,strike_price_target:float,db: Session = Depends(get_db)):
+  try:
+    return AdminService.update_strike_price_stop_loss_target_v1(unique_id=unique_id,strike_price_stop_loss=strike_price_stop_loss,strike_price_target=strike_price_target,db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 

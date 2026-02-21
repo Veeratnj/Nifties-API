@@ -552,17 +552,33 @@ class AdminService:
         
 
 
+    @staticmethod
+    def update_strike_price_stop_loss_target_v1(
+        unique_id: str,
+        strike_price_stop_loss: float,
+        strike_price_target: float,
+        db: Session
+    ):
+        signal_log = (
+            db.query(SignalLog)
+            .filter(
+                SignalLog.signal_category == "ENTRY",
+                SignalLog.unique_id == unique_id
+            )
+            .order_by(SignalLog.id.desc())
+            .first()
+        )
 
+        if not signal_log:
+            return False  # No matching entry found
 
+        signal_log.strike_price_stop_loss = strike_price_stop_loss
+        signal_log.strike_price_target = strike_price_target
 
+        db.commit()
+        db.refresh(signal_log)   # Optional but recommended
 
-
-
-
-
-
-
-
+        return True
 
 
 
