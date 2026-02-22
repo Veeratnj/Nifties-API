@@ -222,3 +222,37 @@ async def update_strike_price_stop_loss_target_v1(unique_id:str,strike_price_sto
   except Exception as e:
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+
+
+@router.get("/get-admin-dhan-creds/v1", status_code=status.HTTP_200_OK)
+async def get_admin_dhan_creds(db: Session = Depends(get_db)):
+  try:
+    return AdminService.get_admin_dhan_creds(db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get("/get-all-users-dhan-creds/v1", status_code=status.HTTP_200_OK)
+async def get_all_users_dhan_creds(db: Session = Depends(get_db)):
+  try:
+    return AdminService.get_all_users_dhan_creds(db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
+
+@router.put("/update-admin-dhan-creds/v1", status_code=status.HTTP_201_CREATED)
+async def update_admin_dhan_creds(dhan_id:int,access_token:str,client_id:str,db: Session = Depends(get_db),):
+  try:
+    return AdminService.update_admin_dhan_creds(db=db,dhan_id=dhan_id,access_token=access_token,client_id=client_id)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+
+@router.put("/update-user-dhan-creds/v1", status_code=status.HTTP_201_CREATED)
+async def update_user_dhan_creds(user_id:int,access_token:str,client_id:str,db: Session = Depends(get_db),):
+  try:
+    return AdminService.update_user_dhan_creds(db=db,user_id=user_id,access_token=access_token,client_id=client_id)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

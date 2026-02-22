@@ -2,7 +2,7 @@
 
 
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest ,StrikeData
-from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData ,SymbolMaster,User,DhanCredentials,AngelOneCredentials , ScriptsInfo
+from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData ,SymbolMaster,User,DhanCredentials,AngelOneCredentials , ScriptsInfo , AdminDhanCreds
 import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -579,6 +579,58 @@ class AdminService:
         db.refresh(signal_log)   # Optional but recommended
 
         return True
+
+    @staticmethod
+    def get_all_users_dhan_creds(db:Session):
+        dhan_info = db.query(DhanCredentials).all()
+        dhan_list = []
+        for dhan in dhan_info:
+            dhan_list.append({
+                "user_name":dhan.user.username,
+                "user_id":dhan.user.id,
+                "client_id": dhan.client_id,
+                "access_token": dhan.access_token,
+                "is_active": dhan.is_active,
+            })
+        return dhan_list
+
+
+    @staticmethod
+    def get_admin_dhan_creds(db:Session):
+        dhan_info = db.query(AdminDhanCreds).all()
+        dhan_list = []
+        for dhan in dhan_info:
+            dhan_list.append({
+                'id':dhan.id,
+                "client_id": dhan.client_id,
+                "access_token": dhan.access_token,
+            })
+        return dhan_list
+
+
+    @staticmethod
+    def update_admin_dhan_creds(db:Session,dhan_id:int,access_token:str,client_id:str):
+        admin_dhan_creds = db.query(AdminDhanCreds).filter(AdminDhanCreds.id == dhan_id).first()
+        if not admin_dhan_creds:
+            return False
+        admin_dhan_creds.access_token = access_token
+        admin_dhan_creds.client_id = client_id
+        db.commit()
+        db.refresh(admin_dhan_creds)
+        return True
+
+    @staticmethod
+    def update_user_dhan_creds(db:Session,user_id:int,access_token:str,client_id:str):
+        user_dhan_creds = db.query(DhanCredentials).filter(DhanCredentials.user_id == user_id).first()
+        if not user_dhan_creds:
+            return False
+        user_dhan_creds.access_token = access_token
+        user_dhan_creds.client_id = client_id
+        db.commit()
+        db.refresh(user_dhan_creds)
+        return True
+        
+        
 
 
 
