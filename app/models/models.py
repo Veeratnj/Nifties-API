@@ -15,6 +15,7 @@ from datetime import datetime
 from sqlalchemy.sql import func
 import enum
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import LargeBinary
 
 
 Base = declarative_base()
@@ -1625,7 +1626,15 @@ class ScriptsInfo(Base):
     is_deleted = Column(Boolean, nullable=False, default=False)
 
 
+class SymbolTokenFile(Base):
+    __tablename__ = "symbol_token_file"
 
+    id = Column(BigInteger, primary_key=True)
+    symbol = Column(String(50), nullable=False)
+    file = Column(LargeBinary, nullable=False)
+    file_path = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    is_deleted = Column(Boolean, nullable=False, default=False)
 
 
 

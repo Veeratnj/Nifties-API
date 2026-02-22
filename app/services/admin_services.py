@@ -2,7 +2,7 @@
 
 
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest ,StrikeData
-from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData ,SymbolMaster,User,DhanCredentials,AngelOneCredentials , ScriptsInfo , AdminDhanCreds
+from app.models.models import SignalLog, StrikeInstrument, Strategy , Order , StrikePriceTickData ,SymbolMaster,User,DhanCredentials,AngelOneCredentials , ScriptsInfo , AdminDhanCreds,SymbolTokenFile
 import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -12,6 +12,11 @@ from app.services.order_service_utils import get_all_traders_id
 from datetime import date, timedelta
 from app.services.signal_service import SignalService
 from typing import List
+import os
+
+from app.schemas.schema import SymbolTokenFileSchema
+
+
 
 class AdminService:
     
@@ -630,6 +635,74 @@ class AdminService:
         db.refresh(user_dhan_creds)
         return True
         
+
+
+    @staticmethod
+    def upload_or_update_file(
+        symbolTokenFileSchema: SymbolTokenFileSchema,
+        db: Session
+    ):
+        BASE_PATH = "/home/ubuntu/workspace/Nifties-opt/strike_data"
+
+        os.makedirs(BASE_PATH, exist_ok=True)
+
+        file_path = os.path.join(
+            BASE_PATH,
+            symbolTokenFileSchema.file_name
+        )
+
+        # Write file to disk
+        with open(file_path, "wb") as f:
+            f.write(symbolTokenFileSchema.file)
+
+        symbol_token_file = db.query(SymbolTokenFile).filter(
+            SymbolTokenFile.symbol == symbolTokenFileSchema.symbol
+        ).first()
+
+        if symbol_token_file:
+            symbol_token_file.file = symbolTokenFileSchema.file
+            symbol_token_file.file_path = file_path
+            symbol_token_file.updated_at = datetime.now()
+
+        else:
+            symbol_token_file = SymbolTokenFile(
+                symbol=symbolTokenFileSchema.symbol,
+                file=symbolTokenFileSchema.file,
+                file_path=file_path,
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            db.add(symbol_token_file)
+
+        db.commit()
+        db.refresh(symbol_token_file)
+
+        return {"message": "File uploaded/updated successfully"}
+    
+    @staticmethod
+    def list_files(db: Session):
+        files = db.query(
+            SymbolTokenFile.id,
+            SymbolTokenFile.symbol,
+            SymbolTokenFile.file_path,
+            SymbolTokenFile.created_at,
+            SymbolTokenFile.is_deleted
+        ).filter(
+            SymbolTokenFile.is_deleted == False
+        ).all()
+        files_list = []
+        for file in files:
+            files_list.append({
+                "id": file.id,
+                "symbol": file.symbol,
+                "file_name": file.file_path.split("/")[-1],
+                "created_at": file.created_at,
+                "is_deleted": file.is_deleted,
+            })
+        return files_list
+
+
+                
         
 
 

@@ -567,3 +567,12 @@ class UserInformationSchema(BaseModel):
         orm_mode = True
 
 
+
+class SymbolTokenFileSchema(BaseModel):
+    symbol: str = Field(..., min_length=1, description="Symbol")
+    file: bytes = Field(..., description="File")
+    file_name: str = Field(..., min_length=1, description="File path")
+
+    class Config:
+        orm_mode = True
+

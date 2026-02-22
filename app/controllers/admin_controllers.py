@@ -6,12 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.schemas.signal_schema import AdminSignalEntryRequest, AdminSignalExitRequest ,InstrumentEditRequest 
-from app.schemas.schema import BrokerDetailsUpdateSchema
+from app.schemas.schema import BrokerDetailsUpdateSchema,SymbolTokenFileSchema
 from app.db.db import get_db
 from app.models.models import User
 from app.utils.security import get_current_user
 from app.services.admin_services import AdminService
 import logging
+from fastapi import UploadFile, File
 
 logger = logging.getLogger(__name__)
 
@@ -256,3 +257,30 @@ async def update_user_dhan_creds(user_id:int,access_token:str,client_id:str,db: 
     return AdminService.update_user_dhan_creds(db=db,user_id=user_id,access_token=access_token,client_id=client_id)
   except Exception as e:
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post("/upload/update/v1")
+async def upload_or_update_file(
+    symbolTokenFileSchema: SymbolTokenFileSchema,
+    db: Session = Depends(get_db)
+):
+    try:
+        return AdminService.upload_or_update_file(
+            symbolTokenFileSchema=symbolTokenFileSchema,
+            db=db
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.get("/list-files/v1", status_code=status.HTTP_200_OK)
+async def list_files(db: Session = Depends(get_db)):
+    try:
+        return AdminService.list_files(db=db)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
