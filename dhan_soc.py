@@ -183,6 +183,7 @@ def main():
             last_tick_time = current_time
 
             if 'LTP' in response and 'security_id' in response:
+                print("✅ Inserting LTP", response)
                 insert_spot_ltp_api(
                     token=response['security_id'],
                     ltp=response['LTP']
