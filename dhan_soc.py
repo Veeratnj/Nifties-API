@@ -3,40 +3,23 @@ from datetime import datetime
 import time
 import requests
 import pytz
-import sys
 import signal
-import asyncio   # ✅ ADDED
+import asyncio
+
+# ================== FIX FOR PYTHON 3.11 ==================
+# Create ONE persistent global event loop
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
 # ================== CONFIG ==================
 
 ist = pytz.timezone("Asia/Kolkata")
 
-# ================== CREDENTIALS ==================
-
-def get_dhan_creds(id=2):
-    try:
-        url = f"http://localhost:8000/db/signals/get-admin-dhan-creds/{str(id)}"
-        resp = requests.get(url, timeout=5)
-        resp.raise_for_status()
-
-        records = resp.json()
-
-        if isinstance(records, dict):
-            records['client_id'] = str(records.get('client_id', '')).strip()
-            records['access_token'] = records.get('access_token', '').strip()
-
-        print(f"✅ Fetched credentials for Client ID: {records.get('client_id', 'Unknown')}")
-        return records
-
-    except Exception as e:
-        print(f"❌ Error fetching credentials: {e}")
-        return {'client_id': '', 'access_token': ''}
-
-
-CREDENTIALS = [get_dhan_creds(), get_dhan_creds()]
+shutdown_flag = False
 current_cred_index = 0
-
 version = "v2"
+
+global_secid_symbol_mapper_dict = {}
 
 marketfeed_dict = {
     'MCX': MarketFeed.MCX,
@@ -47,19 +30,38 @@ marketfeed_dict = {
     'IDX': MarketFeed.IDX,
 }
 
-global_secid_symbol_mapper_dict = {}
-
-shutdown_flag = False
-
 # ================== SIGNAL HANDLER ==================
 
 def signal_handler(signum, frame):
     global shutdown_flag
-    print("\n\n" + "=" * 70)
+    print("\n" + "=" * 70)
     print("🛑 SHUTDOWN REQUESTED")
     print("=" * 70)
-    shutdown_flag = True   # ❗ DO NOT sys.exit() here
+    shutdown_flag = True
 
+signal.signal(signal.SIGINT, signal_handler)
+
+# ================== CREDENTIALS ==================
+
+def get_dhan_creds(id=2):
+    try:
+        url = f"http://localhost:8000/db/signals/get-admin-dhan-creds/{id}"
+        resp = requests.get(url, timeout=5)
+        resp.raise_for_status()
+
+        records = resp.json()
+        records['client_id'] = str(records.get('client_id', '')).strip()
+        records['access_token'] = records.get('access_token', '').strip()
+
+        print(f"✅ Fetched credentials for Client ID: {records['client_id']}")
+        return records
+
+    except Exception as e:
+        print(f"❌ Credential error: {e}")
+        return {'client_id': '', 'access_token': ''}
+
+
+CREDENTIALS = [get_dhan_creds(), get_dhan_creds()]
 
 # ================== API HELPERS ==================
 
@@ -84,12 +86,11 @@ def get_new_strike_instruments():
 
         return instruments
 
-    except Exception as e:
-        print(f"⚠️ Instrument fetch error: {e}")
+    except:
         return []
 
 
-def insert_spot_ltp_api(token: str, ltp: float):
+def insert_spot_ltp_api(token, ltp):
     try:
         url = "http://localhost:8000/api/tick/insert-strike-ltp"
         payload = {
@@ -98,34 +99,25 @@ def insert_spot_ltp_api(token: str, ltp: float):
             "symbol": global_secid_symbol_mapper_dict.get(token, token)
         }
         requests.post(url, json=payload, timeout=3)
-        return True
     except:
-        return False
+        pass
 
 
 # ================== WS HELPERS ==================
 
-def start_ws(instruments, cred_index=0):
+def start_ws(instruments, cred_index):
     cred = CREDENTIALS[cred_index]
-
     ctx = DhanContext(cred['client_id'], cred['access_token'])
     ws = MarketFeed(ctx, instruments, version)
-
     print(f"✅ WS started with Client ID: {cred['client_id']}")
     return ws
 
 
 def stop_ws(ws):
-    """Safe async disconnect (Manual + Jenkins safe)"""
+    """Safe disconnect using persistent event loop"""
     try:
-        try:
-            loop = asyncio.get_running_loop()
-            loop.create_task(ws.disconnect())
-        except RuntimeError:
-            asyncio.run(ws.disconnect())
-
+        loop.run_until_complete(ws.disconnect())
         print("🛑 WS disconnected")
-
     except Exception as e:
         print(f"⚠️ Disconnect error: {e}")
 
@@ -134,8 +126,6 @@ def stop_ws(ws):
 
 def main():
     global shutdown_flag, current_cred_index
-
-    signal.signal(signal.SIGINT, signal_handler)
 
     print("=" * 70)
     print("🚀 DHAN MARKET FEED STARTING")
@@ -156,8 +146,8 @@ def main():
         try:
             now_ist = datetime.now(ist)
 
-            start_time = now_ist.replace(hour=9, minute=0, second=0, microsecond=0)
-            end_time = now_ist.replace(hour=23, minute=30, second=0, microsecond=0)
+            start_time = now_ist.replace(hour=9, minute=0, second=0)
+            end_time = now_ist.replace(hour=23, minute=30, second=0)
 
             if not (start_time <= now_ist <= end_time):
                 time.sleep(5)
@@ -165,6 +155,7 @@ def main():
 
             current_time = time.time()
 
+            # 🔁 Check new instruments
             if current_time - last_reload_check > reload_interval:
                 new_instruments = get_new_strike_instruments()
                 new_tokens = {i[1] for i in new_instruments}
@@ -180,19 +171,20 @@ def main():
 
                 last_reload_check = current_time
 
+            # 🔌 Run WebSocket
             ws.run_forever()
             response = ws.get_data()
 
             if not response:
                 if current_time - last_tick_time > 60:
-                    raise Exception("Connection timeout")
+                    raise Exception("No ticks received")
                 continue
 
             last_tick_time = current_time
 
             if 'LTP' in response and 'security_id' in response:
                 insert_spot_ltp_api(
-                    token=str(response['security_id']),
+                    token=response['security_id'],
                     ltp=response['LTP']
                 )
 
@@ -202,20 +194,12 @@ def main():
 
             current_cred_index = (current_cred_index + 1) % len(CREDENTIALS)
 
-            try:
-                stop_ws(ws)
-            except:
-                pass
-
+            stop_ws(ws)
             time.sleep(5)
             ws = start_ws(instruments, current_cred_index)
 
-    # Final Cleanup
-    try:
-        stop_ws(ws)
-    except:
-        pass
-
+    # Final cleanup
+    stop_ws(ws)
     print("✅ Program ended gracefully")
 
 
