@@ -98,6 +98,7 @@ def insert_spot_ltp_api(token, ltp):
             "ltp": float(ltp),
             "symbol": global_secid_symbol_mapper_dict.get(token, token)
         }
+        print("✅ Inserting payload", payload)
         requests.post(url, json=payload, timeout=3)
     except:
         pass
