@@ -651,9 +651,9 @@ class AdminService:
             symbolTokenFileSchema.file_name
         )
 
-        # Write file to disk
-        with open(file_path, "wb") as f:
-            f.write(symbolTokenFileSchema.file)
+        # # Write file to disk
+        # with open(file_path, "wb") as f:
+        #     f.write(symbolTokenFileSchema.file)
 
         symbol_token_file = db.query(SymbolTokenFile).filter(
             SymbolTokenFile.symbol == symbolTokenFileSchema.symbol
