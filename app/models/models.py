@@ -1630,6 +1630,7 @@ class SymbolTokenFile(Base):
     __tablename__ = "symbol_token_file"
 
     id = Column(BigInteger, primary_key=True)
+    token = Column(String(50), nullable=False)
     symbol = Column(String(50), nullable=False)
     file = Column(LargeBinary, nullable=False)
     file_path = Column(Text, nullable=False)

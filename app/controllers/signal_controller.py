@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from fastapi import BackgroundTasks
 from fastapi import Request
-from app.models.models import SignalLog, AdminDhanCreds , StrikePriceTickData
+from app.models.models import SignalLog, AdminDhanCreds , StrikePriceTickData,SymbolTokenFile
 from app.db.db import get_db
 from app.schemas.signal_schema import SignalEntryRequest, SignalExitRequest, SignalResponse, LTPInsertRequest
 from app.services.signal_service import SignalService
@@ -586,3 +586,20 @@ async def get_strike_price_close_trade_signal(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
+
+
+@router.get("/get-symbol-token-file/{token}")
+async def get_symbol_token_file(token: str, db: Session = Depends(get_db)):
+    try:
+        symbol_token_file = db.query(SymbolTokenFile).filter(SymbolTokenFile.token == token).first()
+        if not symbol_token_file:
+            return {
+                "file": None,
+                "file_path": None,
+            }
+        return {
+            "file": symbol_token_file.file, # base64 encoded file
+            "file_path": symbol_token_file.file_path,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
