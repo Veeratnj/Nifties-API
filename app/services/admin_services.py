@@ -13,7 +13,7 @@ from datetime import date, timedelta
 from app.services.signal_service import SignalService
 from typing import List
 import os
-
+from io import BytesIO
 from app.schemas.schema import SymbolTokenFileSchema
 
 
@@ -721,13 +721,25 @@ class AdminService:
     @staticmethod
     def import_trades(file: str, user_id: int = 3, strategy_code: str = "DAIKOKUTEN",db: Session = None):
         print(f"Starting import from {file} for user {user_id}...")
+        import pandas as pd
+        from datetime import datetime
+        from app.db.db import SessionLocal
+        from app.models.models import SignalLog, Order, Strategy
+        from zoneinfo import ZoneInfo
+        import sys
+        import base64
         
         # Read CSV
-        try:
-            df = pd.read_csv(file)
-        except Exception as e:
-            print(f"Error reading CSV: {e}")
-            return
+        # try:
+            # Step 1: Decode Base64 string
+        file_bytes = base64.b64decode(file)
+
+        # Step 2: Convert to file-like object
+        file_buffer = BytesIO(file_bytes)
+        df = pd.read_csv(file_buffer)
+        # except Exception as e:
+        print(f"Error reading CSV: {e}")
+            
 
         # db = SessionLocal()
         
