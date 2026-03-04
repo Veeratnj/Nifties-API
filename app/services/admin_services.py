@@ -15,6 +15,8 @@ from typing import List
 import os
 from io import BytesIO
 from app.schemas.schema import SymbolTokenFileSchema
+import pandas as pd
+
 
 
 
@@ -762,8 +764,8 @@ class AdminService:
                     exit_price = float(str(row['SELL ENTRY']).replace(',', ''))
                     
                     # Times
-                    entry_time = AdminServices.parse_time(row['ENTRY TIME'])
-                    exit_time = AdminServices.parse_time(row['EXIT TIME'])
+                    entry_time = AdminService.parse_time(row['ENTRY TIME'])
+                    exit_time = AdminService.parse_time(row['EXIT TIME'])
                     
                     # Use string symbol for unique_id
                     unique_id = f"MANUAL_IMPORT_{int(entry_time.timestamp())}_{index}"
