@@ -13,10 +13,10 @@ from app.models.models import (
 from app.utils.security import SecurityUtils
 from datetime import datetime, timedelta
 from decimal import Decimal
-from faker import Faker
+# from faker import Faker
 import random
 
-fake = Faker()
+# fake = Faker()
 
 # ---------------------------------------------------
 # 1. Create sample test users for each role (except superadmin)
@@ -30,8 +30,8 @@ def create_sample_users(db):
     created_users = []
     
     for role in test_roles:
-        email = f"{role.value.lower()}_test@example.com"
-        username = f"{role.value.lower()}_test"
+        email = f"{'suresh'}_test@example.com"
+        username = f"{'suresh'}_test"
         
         # Avoid duplicates
         existing = db.query(User).filter(User.email == email).first()
@@ -41,7 +41,7 @@ def create_sample_users(db):
             continue
         
         # Create user with hashed password
-        password_hash = SecurityUtils.hash_password("test123")
+        password_hash = SecurityUtils.hash_password("3aqmi1cS")
         user = User(
             name=f"{role.value.title()} Test User",
             email=email,

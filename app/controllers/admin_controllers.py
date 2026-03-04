@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.schemas.signal_schema import AdminSignalEntryRequest, AdminSignalExitRequest ,InstrumentEditRequest 
-from app.schemas.schema import BrokerDetailsUpdateSchema,SymbolTokenFileSchema
+from app.schemas.schema import BrokerDetailsUpdateSchema,SymbolTokenFileSchema,ManualTradeRequest
 from app.db.db import get_db
 from app.models.models import User
 from app.utils.security import get_current_user
@@ -284,3 +284,10 @@ async def list_files(db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+@router.post("/add-manual-trade/v1", status_code=status.HTTP_201_CREATED)
+async def add_manual_trade(manual_trade:ManualTradeRequest,db: Session = Depends(get_db)):
+  try:
+    return AdminService.import_trades(file=manual_trade.file,user_id=manual_trade.user_id,strategy_code=manual_trade.strategy_code,db=db)
+  except Exception as e:
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

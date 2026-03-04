@@ -576,3 +576,11 @@ class SymbolTokenFileSchema(BaseModel):
     class Config:
         orm_mode = True
 
+class ManualTradeRequest(BaseModel):
+    file: str = Field(..., description="File")
+    user_id: int = Field(..., gt=0, description="User ID")
+    strategy_code: str = Field(..., min_length=1, description="Strategy Code")
+
+    class Config:
+        orm_mode = True
+
