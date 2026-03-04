@@ -738,7 +738,7 @@ class AdminService:
         file_buffer = BytesIO(file_bytes)
         df = pd.read_csv(file_buffer)
         # except Exception as e:
-        print(f"Error reading CSV: {e}")
+        
             
 
         # db = SessionLocal()
